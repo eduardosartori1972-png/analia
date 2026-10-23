@@ -1,0 +1,34 @@
+# Configuración de pnpm para este repo (pnpm 11 lee estas opciones desde acá;
+# ya no lee .npmrc).
+#
+# nodeLinker=hoisted: en Windows, el node_modules aislado usa junctions que el
+# resolver de Node y Turbopack no siguen de forma consistente cuando el proyecto
+# está en una ruta larga. El linker hoisted crea directorios reales y evita el
+# problema. Ver docs/DECISIONS.md (ADR-008).
+nodeLinker: hoisted
+
+# Store local al repo: instalación reproducible y sin depender del store global.
+storeDir: .pnpm-store
+
+# allowBuilds: dependencias con scripts de instalación que revisamos y aceptamos
+# explícitamente. Cualquier otra queda bloqueada por defecto.
+allowBuilds:
+  esbuild: true
+  sharp: true
+  unrs-resolver: true
+
+# pnpm 11 aplica minimumReleaseAge por defecto; estas son las versiones del
+# esqueleto inicial que ya revisamos.
+minimumReleaseAgeExclude:
+  - "@next/env@16.4.3"
+  - "@next/eslint-plugin-next@16.4.3"
+  - "@next/swc-darwin-arm64@16.4.3"
+  - "@next/swc-darwin-x64@16.4.3"
+  - "@next/swc-linux-arm64-gnu@16.4.3"
+  - "@next/swc-linux-arm64-musl@16.4.3"
+  - "@next/swc-linux-x64-gnu@16.4.3"
+  - "@next/swc-linux-x64-musl@16.4.3"
+  - "@next/swc-win32-arm64-msvc@16.4.3"
+  - "@next/swc-win32-x64-msvc@16.4.3"
+  - "eslint-config-next@16.4.3"
+  - "next@16.4.3"

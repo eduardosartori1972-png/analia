@@ -1,0 +1,27 @@
+# Dependencias
+node_modules/
+.pnpm-store/
+.pnpm-store-*/
+
+# Next.js
+.next/
+out/
+build/
+next-env.d.ts
+*.tsbuildinfo
+
+# Tests
+coverage/
+
+# Entorno: las claves nunca se commitean
+.env
+.env.*
+!.env.example
+
+# Vercel
+.vercel
+
+# Sistema
+.DS_Store
+Thumbs.db
+*.log
