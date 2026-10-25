@@ -19,6 +19,9 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   reactStrictMode: true,
+  // Solo desarrollo. El celular entra por la IP de la LAN y Next bloquea los
+  // recursos de dev (HMR incluido) si el origen no está en esta lista.
+  allowedDevOrigins: ["192.168.1.103"],
   // Turbopack y la recolección de datos de páginas usan workers. Con
   // `workerThreads` corren como hilos del mismo proceso en lugar de forks:
   // el resultado es el mismo y funciona también en entornos donde abrir
