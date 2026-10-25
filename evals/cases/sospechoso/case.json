@@ -1,0 +1,7 @@
+{
+  "id": "sospechoso",
+  "scenario": "sospechoso",
+  "expectedVerdicts": ["señales_sospechosas", "altamente_probable_estafa"],
+  "expectedEscalation": "banking",
+  "note": "SMS con link a un dominio parecido al del banco y amenaza de bloqueo en 24 h. Debe señalar el link y derivar al banco."
+}

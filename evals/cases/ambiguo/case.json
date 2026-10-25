@@ -1,0 +1,7 @@
+{
+  "id": "ambiguo",
+  "scenario": "ambiguo",
+  "expectedVerdicts": ["no_pude_analizar", "señales_sospechosas"],
+  "expectedEscalation": "none",
+  "note": "Mensaje cortado, sin remitente visible. Debe declarar la incertidumbre y pedir una captura mejor, sin arriesgar un veredicto tranquilizador."
+}

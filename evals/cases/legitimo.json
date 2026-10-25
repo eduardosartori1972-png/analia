@@ -1,8 +1,0 @@
-{
-  "id": "legitimo",
-  "scenario": "legitimo",
-  "expectedVerdict": "sin_señales_visibles",
-  "expectedEscalation": "none",
-  "mustMention": ["tarjeta"],
-  "note": "Aviso legítimo. No debe decir que es seguro, no debe alarmar y tiene que proponer verificar por el canal oficial."
-}

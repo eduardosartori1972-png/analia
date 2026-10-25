@@ -26,16 +26,32 @@
 
 ## Candidatos
 
-| Proveedor                                           | Fortalezas esperables                                                              | Riesgos a verificar                                                                 |
-| --------------------------------------------------- | ---------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| **OpenAI (familia con visión)**                     | Salida estructurada madura, buen soporte de español, SDK y documentación sólidos   | Retención por defecto y si el tier de API entrena; costo por imagen alta resolución |
-| **Google Gemini**                                   | Ventana de contexto grande, buena lectura de imágenes, cuota gratuita para pruebas | Términos de datos por tier; latencia variable; formato de salida a validar          |
-| **Anthropic Claude**                                | Buen seguimiento de instrucciones y tono cuidado, salida estructurada              | Cobertura de idioma/región; precio; retención                                       |
-| **Mistral (modelos con visión)**                    | Opción europea, buenos términos de datos                                           | Calidad de OCR en capturas de teléfono a validar                                    |
-| **Modelo local (Qwen-VL / Llama visión en un VPS)** | Privacidad máxima: la imagen no sale de nuestra infraestructura                    | Costo fijo de GPU, mantenimiento, calidad y latencia a cargo nuestro                |
+| Proveedor                                           | Fortalezas esperables                                                                          | Riesgos a verificar                                                                                           |
+| --------------------------------------------------- | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| **DeepSeek (modelo Flash, visión)**                 | Cuenta y saldo ya disponibles; API compatible con OpenAI; multimodal y salida JSON; costo bajo | Confirmar por escrito no-entrenamiento y retención; validar el nombre exacto del modelo y los límites de tasa |
+| **OpenAI (familia con visión)**                     | Salida estructurada madura, buen soporte de español, SDK y documentación sólidos               | Retención por defecto y si el tier de API entrena; costo por imagen alta resolución                           |
+| **Google Gemini**                                   | Ventana de contexto grande, buena lectura de imágenes, cuota gratuita para pruebas             | Términos de datos por tier; latencia variable; formato de salida a validar                                    |
+| **Anthropic Claude**                                | Buen seguimiento de instrucciones y tono cuidado, salida estructurada                          | Cobertura de idioma/región; precio; retención                                                                 |
+| **Mistral (modelos con visión)**                    | Opción europea, buenos términos de datos                                                       | Calidad de OCR en capturas de teléfono a validar                                                              |
+| **Modelo local (Qwen-VL / Llama visión en un VPS)** | Privacidad máxima: la imagen no sale de nuestra infraestructura                                | Costo fijo de GPU, mantenimiento, calidad y latencia a cargo nuestro                                          |
 
 No hay un ganador obvio sin medir. La decisión se toma con el corpus de `evals/` y una
 planilla de tres columnas: aciertos, latencia y costo por caso.
+
+### Decisión para el MVP: DeepSeek primario
+
+Se usa **DeepSeek (modelo Flash con visión)** como proveedor primario porque la cuenta y
+el saldo ya existen y la API es compatible con el formato de OpenAI, así que el adaptador
+es el mismo que usaría cualquier otro proveedor de esa familia.
+
+Lo que queda por confirmar con el proveedor antes de publicar la política de privacidad:
+no entrenamiento con los datos, plazo de retención y región de procesamiento. Mientras
+eso no esté, la página `/privacidad` sigue marcada como borrador.
+
+**Respaldo:** la arquitectura admite un segundo proveedor (`ANALYZE_FALLBACK_PROVIDER`).
+Si el primario falla o da timeout, la cadena pasa al respaldo antes de mostrar el error.
+Para el piloto se puede usar OpenAI o Gemini con una clave aparte; el adaptador de
+OpenAI-compatible ya está implementado y el de Gemini queda como placeholder documentado.
 
 ## Cómo lo probaría (y qué miraría)
 

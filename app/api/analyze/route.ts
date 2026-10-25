@@ -5,23 +5,22 @@ import type { Analysis } from "@/lib/analysis/contract";
 import { analysisSchema } from "@/lib/analysis/contract";
 import { AnalysisError } from "@/lib/analysis/errors";
 import { MAX_SERVER_IMAGE_BYTES, sniffImageType } from "@/lib/analysis/image-guard";
-import type { AnalysisInput, AnalysisProvider } from "@/lib/analysis/provider";
 import { getAnalysisProvider } from "@/lib/analysis/providers";
 import { createRateLimiter } from "@/lib/analysis/rate-limit";
-import { withTimeout } from "@/lib/analysis/timeout";
 import { enforceSafety, SafetyViolation } from "@/lib/safety/policy";
 
 /**
  * Único endpoint que toca la imagen. Vive en memoria: no escribe a disco, ni a
  * base, ni a logs (ADR-001).
+ *
+ * El reintento y el respaldo viven en la cadena de proveedores, no acá: el
+ * endpoint no sabe cuántos proveedores hay ni en qué orden se intentan.
  */
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 30;
 
-const PROVIDER_TIMEOUT_MS = 12_000;
-const MAX_ATTEMPTS = 2;
 const RATE_LIMIT_WINDOW_MS = 10 * 60_000;
 
 function readRateLimit(): number {
@@ -52,41 +51,6 @@ function errorResponse(error: AnalysisError, requestId: string) {
   return NextResponse.json(
     { error: { code: error.code, message: error.message }, requestId },
     { status: error.status, headers },
-  );
-}
-
-/**
- * Un solo reintento. Si el proveedor falla dos veces seguidas, mostrar el error
- * es más honesto que hacer esperar a la persona. Con 12 s por intento, el peor
- * caso queda por debajo de `maxDuration`.
- *
- * Los errores del proveedor no se muestran tal cual: se traducen a un mensaje
- * propio para no filtrar detalles técnicos ni texto ajeno.
- */
-async function analyzeWithRetry(
-  provider: AnalysisProvider,
-  input: AnalysisInput,
-  requestId: string,
-): Promise<Analysis> {
-  let lastError: unknown;
-
-  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
-    try {
-      return await withTimeout(provider.analyze(input), PROVIDER_TIMEOUT_MS);
-    } catch (error) {
-      lastError = error;
-      // Solo el código: el mensaje del proveedor puede traer detalles técnicos
-      // o texto que no escribimos nosotros.
-      const code = error instanceof AnalysisError ? error.code : "unknown";
-      console.error(`[analyze] intento ${attempt} falló (${requestId}): ${code}`);
-    }
-  }
-
-  if (lastError instanceof AnalysisError && lastError.code === "timeout") throw lastError;
-
-  throw new AnalysisError(
-    "provider_error",
-    "No pudimos analizar la imagen. Probá de nuevo en un rato.",
   );
 }
 
@@ -146,8 +110,20 @@ export async function POST(request: Request) {
       throw new AnalysisError("invalid_image", "Ese archivo no es una imagen que podamos leer.");
     }
 
-    const provider = getAnalysisProvider();
-    const raw = await analyzeWithRetry(provider, { image: { bytes, mimeType } }, requestId);
+    let provider;
+    try {
+      provider = getAnalysisProvider();
+    } catch (error) {
+      // Los mensajes de configuración son nuestros y no tienen datos de usuario.
+      const detail = error instanceof Error ? error.message : "desconocido";
+      console.error(`[analyze] configuración de proveedor inválida (${requestId}): ${detail}`);
+      throw new AnalysisError(
+        "provider_error",
+        "No pudimos analizar la imagen. Probá de nuevo en un rato.",
+      );
+    }
+
+    const raw = await provider.analyze({ image: { bytes, mimeType } });
 
     const parsed = analysisSchema.safeParse(raw);
     if (!parsed.success) {
@@ -183,7 +159,9 @@ export async function POST(request: Request) {
   } catch (error) {
     if (error instanceof AnalysisError) return errorResponse(error, requestId);
 
-    console.error(`[analyze] error inesperado (${requestId})`);
+    console.error(
+      `[analyze] error inesperado (${requestId}): ${error instanceof Error ? error.name : "desconocido"}`,
+    );
     return errorResponse(
       new AnalysisError(
         "provider_error",

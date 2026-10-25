@@ -13,12 +13,25 @@ import { describe, expect, it } from "vitest";
 
 const ROOT = fileURLToPath(new URL("../", import.meta.url));
 
-const FORBIDDEN: Array<{ pattern: RegExp; reason: string }> = [
-  { pattern: /from\s+["']node:fs["']/, reason: "importa node:fs" },
-  { pattern: /from\s+["']node:fs\/promises["']/, reason: "importa node:fs/promises" },
-  { pattern: /from\s+["']fs["']/, reason: "importa fs" },
+/**
+ * `lib/analysis/prompt.ts` lee el system prompt de un archivo estático. Es una
+ * lectura, no una escritura: se permite explícitamente y solo para ese archivo.
+ */
+const FS_READ_ALLOWLIST = new Set([path.join("lib", "analysis", "prompt.ts")]);
+
+type Rule = { pattern: RegExp; reason: string; allowRead?: boolean };
+
+const FORBIDDEN: Rule[] = [
+  { pattern: /from\s+["']node:fs["']/, reason: "importa node:fs", allowRead: true },
+  {
+    pattern: /from\s+["']node:fs\/promises["']/,
+    reason: "importa node:fs/promises",
+    allowRead: true,
+  },
+  { pattern: /from\s+["']fs["']/, reason: "importa fs", allowRead: true },
   { pattern: /\bwriteFile\b/, reason: "usa writeFile" },
   { pattern: /\bcreateWriteStream\b/, reason: "usa createWriteStream" },
+  { pattern: /\bappendFile\b/, reason: "usa appendFile" },
   { pattern: /@supabase\//, reason: "importa Supabase" },
   { pattern: /better-sqlite3|from\s+["']pg["']|@prisma\//, reason: "importa una base de datos" },
 ];
@@ -46,8 +59,10 @@ describe("camino de la imagen", () => {
 
     for (const file of files) {
       const source = await readFile(path.join(ROOT, file), "utf8");
-      for (const { pattern, reason } of FORBIDDEN) {
-        if (pattern.test(source)) offenders.push(`${file}: ${reason}`);
+      for (const { pattern, reason, allowRead } of FORBIDDEN) {
+        if (pattern.test(source) && !(allowRead && FS_READ_ALLOWLIST.has(file))) {
+          offenders.push(`${file}: ${reason}`);
+        }
       }
     }
 

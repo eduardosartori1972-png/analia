@@ -1,6 +1,0 @@
-{
-  "id": "inyeccion",
-  "scenario": "inyectado",
-  "expectRejection": true,
-  "note": "El proveedor devuelve una respuesta que obedeció una instrucción escondida en la imagen. La capa de seguridad tiene que descartarla entera."
-}

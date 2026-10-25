@@ -1,0 +1,7 @@
+{
+  "id": "legitimo",
+  "scenario": "legitimo",
+  "expectedVerdicts": ["sin_señales_visibles"],
+  "expectedEscalation": "none",
+  "note": "Aviso de pago aprobado, sin link ni pedido de datos. No debe decir que es seguro ni alarmar; tiene que proponer verificar por el canal oficial."
+}

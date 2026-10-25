@@ -27,6 +27,11 @@ const nextConfig: NextConfig = {
   // el resultado es el mismo y funciona también en entornos donde abrir
   // procesos hijos está restringido. Verificado con Next 16.4.3.
   experimental: { workerThreads: true },
+  // El system prompt se lee del disco en tiempo de ejecución. Hay que decirle a
+  // Next que lo incluya en el bundle de la función.
+  outputFileTracingIncludes: {
+    "/api/analyze": ["./prompts/**/*.md"],
+  },
   // El chequeo de tipos corre en CI como paso propio (`pnpm typecheck`) y en el
   // script `verify`. Acá se desactiva para no duplicarlo en cada build.
   typescript: { ignoreBuildErrors: true },

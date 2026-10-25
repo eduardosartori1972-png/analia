@@ -4,28 +4,54 @@ Asistente digital para adultos mayores. El usuario sube una captura de un mensaj
 correo o ventana que le genera duda y AnalIA le responde, en palabras simples, si ve
 señales de estafa y qué conviene hacer.
 
-> **Estado: Etapa 3 en curso — falta el proveedor real.** La app ya analiza y responde,
-> pero con el Fake Provider. Ya están el prompt v1, la capa de seguridad que arma el
-> texto final, la derivación bancaria, el reintento y el corpus de evaluación. Ver
-> [`docs/PLAN.md`](docs/PLAN.md) y [`docs/PROVIDERS.md`](docs/PROVIDERS.md).
+> **Estado: Etapa 3 — adaptador de DeepSeek listo, falta la clave para correr las evals
+> reales.** Por defecto la app sigue usando el Fake Provider. Ya están el prompt v1, la
+> capa de seguridad, la derivación bancaria, la cadena de respaldo y el corpus de
+> evaluación con capturas sintéticas. Ver [`docs/PLAN.md`](docs/PLAN.md),
+> [`docs/PROVIDERS.md`](docs/PROVIDERS.md) y [`docs/KEY-ROTATION.md`](docs/KEY-ROTATION.md).
+
+## Activación del proveedor real
+
+1. Crear `analia/.env.local` (está en `.gitignore`).
+2. Pegar la clave y el modelo:
+
+   ```bash
+   ANALYZE_PROVIDER=deepseek
+   ANALYZE_API_KEY=sk-...
+   ANALYZE_MODEL=deepseek-flash
+   ```
+
+3. Reiniciar `pnpm dev`.
+4. Correr el corpus contra el proveedor real:
+
+   ```bash
+   ANALYZE_LIVE=1 pnpm test
+   ```
+
+Nunca se usa el prefijo `NEXT_PUBLIC_` ni se commitea el archivo. El paso a paso completo,
+incluida la rotación, está en [`docs/KEY-ROTATION.md`](docs/KEY-ROTATION.md).
 
 ## Qué hay para revisar en esta etapa
 
 - Un proyecto Next.js 16 con TypeScript estricto, listo para instalar y buildear.
 - Flujo de captura: un solo botón primario, vista previa y compresión en el cliente
   (1600 px de lado mayor, JPEG 0,8, sin EXIF).
-- Análisis: contrato validado con zod, taxonomía de cuatro veredictos, Fake Provider y
-  endpoint con validación por magic bytes, timeout, rate limit y techo mensual.
+- Análisis: contrato validado con zod, taxonomía de cuatro veredictos, adaptador de
+  DeepSeek (API compatible con OpenAI) y cadena de respaldo con reintento.
+- Endpoint con validación por magic bytes, timeout por intento, rate limit y techo
+  mensual.
 - Capa de seguridad: el límite final lo escribe el sistema, no el modelo; seis reglas
   descartan respuestas con promesas absolutas o instrucciones de clic.
 - Resultado en pantalla: veredicto, "qué veo", "qué conviene hacer", bloque de
   derivación cuando hay riesgo bancario y límite explícito.
+- Corpus de evaluación con cuatro capturas sintéticas: legítimo, sospechoso, ambiguo e
+  inyección.
 - Botón primario como ancla visual: verde profundo `#0a4a3c`, 64 px de alto, 22 px de
   etiqueta (ADR-009).
 - Design tokens mobile-first: 20 px de cuerpo, contraste AAA, foco visible,
   `prefers-reduced-motion`.
 - Dos pantallas reales: `/` y `/privacidad`, con copy que no afirma nada sin confirmar.
-- ADRs 001–009, modelo de amenazas, borrador de privacidad y esqueleto del piloto.
+- ADRs 001–010, modelo de amenazas, borrador de privacidad y esqueleto del piloto.
 - CI que corre typecheck, lint, formato, tests, build y un chequeo de secretos en el
   bundle del cliente.
 
@@ -37,14 +63,14 @@ Verificado dentro del sandbox:
 - `pnpm typecheck`, `pnpm lint` y `pnpm format:check`.
 - `pnpm build` completo: 3 rutas estáticas, 2 dinámicas y el icono.
 - `pnpm check:client-bundle`: 12 archivos del bundle, 0 coincidencias.
-- Contrato, Fake Provider, rate limit, magic bytes y timeout: 24 comprobaciones.
-- Endpoint sobre el build de producción: 21 comprobaciones (200, 415, 413, 405, 429 con
-  `Retry-After`, `no-store` y forma del contrato).
-- Componente de resultado renderizado con `react-dom/server`: 11 comprobaciones.
+- Corpus de evaluación con el Fake Provider: 4/4.
+- Adaptador de DeepSeek contra un servidor local que imita la API: request, header,
+  data URL, JSON envuelto en markdown, error 500, JSON inválido y timeout.
+- Endpoint sobre el build de producción: presupuesto, inyección y caída del proveedor.
 
-**Pendiente:** `pnpm test` bajo Vitest (el sandbox bloquea el proceso hijo de esbuild)
-y la prueba en el teléfono del botón "Analizar" y del resultado en pantalla. Antes de
-cerrar la etapa, corré `pnpm verify` en tu máquina.
+**Pendiente:** `pnpm test` bajo Vitest (el sandbox bloquea el proceso hijo de esbuild),
+la corrida de las evals contra DeepSeek con tu clave, y la prueba en el teléfono. Antes
+de cerrar la etapa, corré `pnpm verify` en tu máquina.
 
 ## Requisitos
 

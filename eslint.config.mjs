@@ -20,5 +20,12 @@ export default defineConfig([
       "no-console": "off",
     },
   },
+  {
+    // Los tests informan resultados por consola.
+    files: ["tests/**/*.ts"],
+    rules: {
+      "no-console": "off",
+    },
+  },
   globalIgnores([".next/**", "out/**", "build/**", "coverage/**", "next-env.d.ts"]),
 ]);

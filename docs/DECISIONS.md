@@ -15,6 +15,7 @@ por qué.
 | ADR-007 | Vercel como hosting y presupuesto de imagen                       | Aceptada | 2026-10-23 |
 | ADR-008 | `node_modules` hoisted en Windows                                 | Aceptada | 2026-10-23 |
 | ADR-009 | Botón primario: verde profundo y una sola ancla por pantalla      | Aceptada | 2026-10-25 |
+| ADR-010 | DeepSeek como proveedor primario, con cadena de respaldo          | Aceptada | 2026-10-25 |
 
 ---
 
@@ -370,3 +371,54 @@ bancaria que intenta imitar el estafador.
 - **Azul profundo `#0b3d6b`:** mismo contraste, pero lee como app bancaria.
 - **Rojo:** alarma.
 - **Píldora de 52 px:** se perdía entre los textos.
+
+---
+
+## ADR-010 — DeepSeek como proveedor primario, con cadena de respaldo
+
+**Estado:** aceptada · 2026-10-25
+
+### Contexto
+
+La cuenta de DeepSeek ya existe y tiene saldo. El modelo Flash es multimodal y acepta
+salida JSON. Su API es compatible con el formato de chat completions de OpenAI, así que
+el adaptador es el mismo que usaría cualquier proveedor de esa familia.
+
+Al mismo tiempo, el producto no puede quedarse sin respuesta porque un proveedor se cae
+o tarda: para una persona mayor que está decidiendo si un mensaje es una estafa, un
+error genérico es peor que una respuesta de un segundo proveedor.
+
+### Decisión
+
+1. **Primario: DeepSeek.** Se configura con `ANALYZE_PROVIDER=deepseek`,
+   `ANALYZE_API_KEY`, `ANALYZE_MODEL` y, opcionalmente, `ANALYZE_BASE_URL`.
+2. **Adaptador único para APIs compatibles con OpenAI** en
+   `lib/analysis/providers/openai-compatible.ts`. DeepSeek y OpenAI comparten código.
+3. **Cadena de respaldo** (`FailoverProvider`): intenta el primario y, si falla o pasa
+   el techo de tiempo, pasa al secundario. Sin respaldo configurado, reintenta el
+   primario una vez.
+4. **Un techo de 10 s por intento y dos intentos en total**, para que la suma entre en
+   los 30 s de `maxDuration`.
+5. **El endpoint no sabe cuántos proveedores hay.** La cadena vive detrás de la interfaz
+   `AnalysisProvider`.
+6. **El system prompt es un archivo versionado** (`prompts/system.v1.md`) que se lee en
+   tiempo de ejecución y se incluye en el bundle con `outputFileTracingIncludes`.
+
+### Consecuencias
+
+- Cambiar de proveedor o agregar uno nuevo es un archivo y una variable de entorno.
+- El respaldo duplica el costo cuando se activa y puede dar un veredicto distinto al del
+  primario: el corpus de `evals/` se corre contra cada proveedor por separado.
+- La calidad del producto queda atada a los términos de DeepSeek. Hasta que no estén
+  confirmados por escrito (no entrenamiento, retención, región), `/privacidad` sigue
+  marcada como borrador y no se publica la promesa con el plazo `[X]`.
+- Leer el prompt del disco agrega una dependencia de empaquetado: si el archivo no se
+  incluye en el bundle, el endpoint falla con 502. Se mitiga con
+  `outputFileTracingIncludes` y con un error claro en los logs.
+
+### Alternativas descartadas
+
+- **Cambiar de proveedor cuando haya que decidir:** bloquea el avance por una decisión
+  que ya está tomada por disponibilidad de cuenta.
+- **Reintentar solo el mismo proveedor:** no cubre una caída del proveedor.
+- **Cadena de tres proveedores:** más costo y más latencia; dos alcanza para el piloto.

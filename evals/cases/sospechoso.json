@@ -1,8 +1,0 @@
-{
-  "id": "sospechoso",
-  "scenario": "sospechoso",
-  "expectedVerdict": "señales_sospechosas",
-  "expectedEscalation": "banking",
-  "mustMention": ["link"],
-  "note": "SMS con link y amenaza de bloqueo. Debe señalar el link y derivar al banco sin decir que es una estafa confirmada."
-}
