@@ -14,6 +14,7 @@ por qué.
 | ADR-006 | Piloto sin cuentas, acceso por cohorte                            | Aceptada | 2026-10-23 |
 | ADR-007 | Vercel como hosting y presupuesto de imagen                       | Aceptada | 2026-10-23 |
 | ADR-008 | `node_modules` hoisted en Windows                                 | Aceptada | 2026-10-23 |
+| ADR-009 | Botón primario: verde profundo y una sola ancla por pantalla      | Aceptada | 2026-10-25 |
 
 ---
 
@@ -322,3 +323,50 @@ junctions.
   máquina y deja el problema latente para cualquier otra persona.
 - **`--preserve-symlinks`:** cambia la semántica de resolución de Node y rompe
   otros paquetes.
+
+---
+
+## ADR-009 — Botón primario: verde profundo y una sola ancla por pantalla
+
+**Estado:** aceptada · 2026-10-25
+
+### Contexto
+
+El público del MVP necesita un ancla visual inequívoca: a los 70 años, un botón que se
+distinga del resto es la diferencia entre empezar el trámite y quedarse mirando la
+pantalla. El botón anterior era una píldora de 52 px con el mismo peso que una tarjeta
+de texto, y la tarjeta de privacidad competía por la atención arriba del CTA.
+
+El rojo queda descartado: el producto trabaja con miedo y no queremos agregar alarma.
+El azul profundo se evaluó y se descartó por una razón de producto: el usuario está
+juzgando si un mensaje _del banco_ es real, y una interfaz azul lo confunde con la app
+bancaria que intenta imitar el estafador.
+
+### Decisión
+
+1. **Un solo elemento sólido por pantalla.** El botón primario es ancho completo, 64 px
+   de alto, etiqueta de 22 px seminegrita y radio de 16 px. Todo lo demás es outline,
+   texto o directamente no existe.
+2. **Verde profundo `#0a4a3c`.** 9,30:1 contra el fondo `#f7f4ee` y 10,21:1 con texto
+   blanco encima: AAA en ambos sentidos.
+3. **El CTA va antes del aviso de privacidad.** El aviso pasa a una línea debajo, sin
+   tarjeta ni sombra, con el enlace a `/privacidad`.
+4. **El estado deshabilitado no tiene relleno.** Borde y texto apagados: un botón
+   inactivo nunca debe parecer la acción principal.
+5. **El rojo no se usa; el ámbar queda solo para advertencias.**
+
+### Consecuencias
+
+- El aviso de privacidad pierde protagonismo visual. Sigue presente, en la misma
+  pantalla y a un toque de la política completa; el riesgo se acepta a cambio de una
+  acción principal clara.
+- Cualquier acción secundaria futura ("Cambiar", "Quitar") tiene que ser outline o
+  texto, nunca otra superficie sólida.
+- El ancla depende del contraste y del tamaño, no del color solo: sigue funcionando en
+  escala de grises.
+
+### Alternativas descartadas
+
+- **Azul profundo `#0b3d6b`:** mismo contraste, pero lee como app bancaria.
+- **Rojo:** alarma.
+- **Píldora de 52 px:** se perdía entre los textos.

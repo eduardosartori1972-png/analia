@@ -6,7 +6,7 @@ cambian sin un ADR.
 | Etapa | Alcance                                             | Estado                             |
 | ----- | --------------------------------------------------- | ---------------------------------- |
 | 0     | Fundaciones: repo, CI, esqueleto, ADRs, docs        | **Verificada** — falta tu revisión |
-| 1     | Pantalla de subida mobile-first                     | Pendiente                          |
+| 1     | Pantalla de subida mobile-first                     | **Implementada** — a revisión      |
 | 2     | Contrato de análisis, endpoint y Fake Provider      | Pendiente                          |
 | 3     | Visión real, respuesta en texto y capa de seguridad | Pendiente                          |
 | 4     | Datos duros: links, teléfonos y remitentes          | Pendiente                          |
@@ -61,22 +61,32 @@ antes de analizarla, sin que nada salga del dispositivo todavía.
 
 **Alcance**
 
-- Pantalla única: título → botón "Subir captura" → preview → "Cambiar" → CTA
-  "Analizar" (deshabilitado sin imagen) → estados vacío/cargando/error.
+- Pantalla única: botón "Subir una captura" → preview → "Analizar" (deshabilitado en
+  esta etapa) → "Cambiar la captura" / "Quitar". Estados: vacío, preparando, listo,
+  error.
+- Un solo punto de entrada con `accept="image/*"`: el sistema operativo decide si abre
+  cámara o galería.
 - Compresión y eliminación de EXIF en el cliente (`lib/image/preprocess.ts`).
-- Aviso de privacidad corto antes del CTA.
+- Aviso de privacidad como una línea debajo del CTA (ADR-009).
 - Sin red: el botón "Analizar" queda inerte en esta etapa.
 
 **Criterios de aceptación**
 
-- [ ] 360 × 640 sin scroll horizontal; una sola columna.
-- [ ] Cuerpo ≥ 20 px; objetivos táctiles ≥ 52 px.
-- [ ] Acepta JPEG, PNG y HEIC desde cámara y galería en Chrome Android.
-- [ ] Rechaza archivos de más de 10 MB con un mensaje que se entiende.
-- [ ] La imagen resultante es menor a 3,5 MB y no tiene EXIF (verificado con `exiftool`).
-- [ ] El aviso de privacidad aparece antes del CTA.
-- [ ] axe sin errores críticos; navegable con TalkBack.
-- [ ] Copy en voseo, sin jerga técnica.
+- [x] Una sola columna, sin anchos fijos; el layout no excede el viewport a 360 px.
+- [x] Cuerpo ≥ 20 px; CTA de 64 px de alto (≥ 52 px exigidos) y secundarios ≥ 52 px.
+- [x] Rechaza archivos de más de 10 MB y archivos que no son imagen, con mensaje
+      entendible (cubierto por tests unitarios).
+- [x] Aviso de privacidad en la misma pantalla, junto al CTA, con enlace a la política.
+- [x] Copy en voseo, sin jerga técnica.
+- [ ] Acepta JPEG, PNG y HEIC desde cámara y galería en Chrome Android (requiere
+      dispositivo real).
+- [ ] La imagen resultante es menor a 3,5 MB y no tiene EXIF (verificado con `exiftool`
+      sobre una captura real).
+- [ ] axe sin errores críticos; navegable con TalkBack (requiere navegador).
+
+> **Estado:** implementada. Verificado en el sandbox el build, el HTML servido, las
+> reglas de tamaño y los cálculos de redimensionado. Falta la prueba en dispositivo del
+> selector de archivos y de la compresión real.
 
 ---
 

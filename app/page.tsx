@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { CaptureUploader } from "@/components/capture-uploader";
+
 export default function HomePage() {
   return (
     <>
@@ -18,31 +20,16 @@ export default function HomePage() {
           en palabras simples, y qué conviene hacer.
         </p>
 
-        <section className="card" aria-labelledby="privacidad-titulo">
-          <h2 id="privacidad-titulo">La captura queda en tu teléfono</h2>
-          <p>
-            AnalIA no guarda tus capturas en ningún servidor. Cuando el análisis esté activo, tu
-            imagen se enviará cifrada al proveedor de visión y se descartará al terminar. La copia
-            original queda en tu dispositivo.
-          </p>
-          <p>
-            <Link href="/privacidad">Leer la política de privacidad (borrador)</Link>
-          </p>
-        </section>
+        <CaptureUploader />
 
-        <div className="cta-block">
-          <button type="button" className="button" disabled aria-describedby="proximo-paso">
-            Subir una captura
-          </button>
-          <p className="hint" id="proximo-paso">
-            Todavía no está activo: esta es la Etapa 0 del MVP. La subida de capturas llega en la
-            próxima etapa.
-          </p>
-        </div>
+        <p className="privacy-line">
+          AnalIA no guarda tus capturas: la copia original queda en tu teléfono.{" "}
+          <Link href="/privacidad">Cómo cuidamos tus datos</Link>.
+        </p>
       </main>
 
       <footer className="footer">
-        <p>AnalIA · Etapa 0 de 6</p>
+        <p>AnalIA · Etapa 1 de 6</p>
         <nav aria-label="Enlaces legales">
           <Link href="/privacidad">Privacidad</Link>
         </nav>
