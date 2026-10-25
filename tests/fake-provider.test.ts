@@ -10,6 +10,18 @@ const input = (size: number) => ({
 
 const fast = { latencyMs: 0 };
 
+/**
+ * Imagen sintética con contenido distinto por semilla. Evita los rellenos
+ * uniformes, que comparten los bits bajos y por eso caen todos en el mismo caso.
+ */
+function syntheticCapture(seed: number): Uint8Array {
+  const bytes = new Uint8Array(256);
+  for (let index = 0; index < bytes.length; index += 1) {
+    bytes[index] = (seed * 101 + index * 37 + ((seed * index) % 97)) & 0xff;
+  }
+  return bytes;
+}
+
 describe("FakeAnalysisProvider", () => {
   it.each([
     ["legitimo", "sin_señales_visibles"],
@@ -35,17 +47,19 @@ describe("FakeAnalysisProvider", () => {
     expect(first.verdict).toBe(second.verdict);
   });
 
-  it("en modo auto varía según el contenido", async () => {
+  it("en modo auto reparte los cuatro casos según el contenido", async () => {
     const provider = new FakeAnalysisProvider("auto", fast);
     const verdicts = new Set<string>();
 
-    // Mismo tamaño, contenido distinto: el caso no depende solo del peso.
-    for (const fill of [0, 3, 1]) {
-      const bytes = new Uint8Array(64).fill(fill);
-      verdicts.add((await provider.analyze({ image: { bytes, mimeType: "image/jpeg" } })).verdict);
+    // 32 imágenes sintéticas distintas, del mismo tamaño. Con 32 alcanza para
+    // que aparezcan los cuatro casos sin depender de una semilla puntual.
+    for (let seed = 0; seed < 32; seed += 1) {
+      const bytes = syntheticCapture(seed);
+      const { verdict } = await provider.analyze({ image: { bytes, mimeType: "image/jpeg" } });
+      verdicts.add(verdict);
     }
 
-    expect(verdicts.size).toBe(3);
+    expect(verdicts.size).toBe(4);
   });
 
   it("el escenario error lanza un error de proveedor", async () => {

@@ -131,6 +131,17 @@ function fingerprint(bytes: Uint8Array): number {
 }
 
 /**
+ * Elige el caso con el byte alto de la huella, no con el módulo del número
+ * entero. El módulo mira solo los dos bits bajos, que dependen únicamente de los
+ * dos bits bajos de los bytes: dos imágenes muy distintas podían caer siempre en
+ * el mismo caso. El byte alto está mezclado por todo el contenido.
+ */
+function pickCase(bytes: Uint8Array): CaseId {
+  const index = (fingerprint(bytes) >>> 24) % CASES.length;
+  return CASES[index] ?? "sospechoso";
+}
+
+/**
  * Respuesta adversaria: simula un modelo que siguió una instrucción escondida en
  * la imagen. La capa de seguridad tiene que descartarla, no mostrarla.
  */
@@ -166,10 +177,7 @@ export class FakeAnalysisProvider implements AnalysisProvider {
       return structuredClone(INJECTED_FIXTURE);
     }
 
-    const caseId: CaseId =
-      this.scenario === "auto"
-        ? (CASES[fingerprint(input.image.bytes) % CASES.length] ?? "sospechoso")
-        : this.scenario;
+    const caseId: CaseId = this.scenario === "auto" ? pickCase(input.image.bytes) : this.scenario;
 
     return structuredClone(FIXTURES[caseId]);
   }
