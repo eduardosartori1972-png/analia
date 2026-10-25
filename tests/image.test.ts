@@ -65,6 +65,10 @@ describe("validateFile", () => {
     expect(validateFile({ size: 1000, type: "application/pdf" })).toBe("not-an-image");
   });
 
+  it("rechaza un archivo vacío", () => {
+    expect(validateFile({ size: 0, type: "image/png" })).toBe("empty");
+  });
+
   it("tolera el type vacío que devuelven algunos Android", () => {
     expect(validateFile({ size: 1000, type: "" })).toBeNull();
   });

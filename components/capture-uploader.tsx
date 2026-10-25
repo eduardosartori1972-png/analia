@@ -40,13 +40,20 @@ export function CaptureUploader() {
 
   useEffect(() => releaseUrl, [releaseUrl]);
 
+  /**
+   * El input se limpia acá, antes de abrir el selector: permite volver a elegir
+   * el mismo archivo y evita tocar el input mientras se está leyendo el que el
+   * usuario acaba de elegir.
+   */
   const openPicker = useCallback(() => {
-    inputRef.current?.click();
+    if (inputRef.current) {
+      inputRef.current.value = "";
+      inputRef.current.click();
+    }
   }, []);
 
   async function handleChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
-    event.target.value = "";
     if (!file) return;
 
     const request = ++captureRequestRef.current;
@@ -54,7 +61,15 @@ export function CaptureUploader() {
     setCaptureError(null);
 
     try {
-      const prepared = await prepareImage(file);
+      // Copia propia de los bytes antes de cualquier otra cosa. En Android, el
+      // archivo que devuelve el selector puede quedar atado al proveedor de
+      // contenido y fallar al decodificarse si el input se limpia o el selector
+      // se cierra entre medio. Con el Blob en memoria, eso deja de importar.
+      const bytes = await file.arrayBuffer();
+      if (request !== captureRequestRef.current) return;
+
+      const snapshot = new Blob([bytes], { type: file.type || "image/jpeg" });
+      const prepared = await prepareImage(snapshot);
       if (request !== captureRequestRef.current) return;
 
       analysisRequestRef.current += 1; // descarta un análisis en curso

@@ -15,6 +15,7 @@ describe("FakeAnalysisProvider", () => {
     ["legitimo", "sin_señales_visibles"],
     ["sospechoso", "señales_sospechosas"],
     ["ambiguo", "no_pude_analizar"],
+    ["estafa", "altamente_probable_estafa"],
   ] as const)(
     "el escenario %s devuelve un contrato válido con veredicto %s",
     async (scenario, verdict) => {
@@ -26,7 +27,7 @@ describe("FakeAnalysisProvider", () => {
     },
   );
 
-  it("en modo auto es determinista para el mismo tamaño", async () => {
+  it("en modo auto es determinista para la misma imagen", async () => {
     const provider = new FakeAnalysisProvider("auto", fast);
     const first = await provider.analyze(input(300));
     const second = await provider.analyze(input(300));
@@ -34,11 +35,14 @@ describe("FakeAnalysisProvider", () => {
     expect(first.verdict).toBe(second.verdict);
   });
 
-  it("en modo auto varía con el tamaño del archivo", async () => {
+  it("en modo auto varía según el contenido", async () => {
     const provider = new FakeAnalysisProvider("auto", fast);
     const verdicts = new Set<string>();
-    for (const size of [100, 101, 102]) {
-      verdicts.add((await provider.analyze(input(size))).verdict);
+
+    // Mismo tamaño, contenido distinto: el caso no depende solo del peso.
+    for (const fill of [0, 3, 1]) {
+      const bytes = new Uint8Array(64).fill(fill);
+      verdicts.add((await provider.analyze({ image: { bytes, mimeType: "image/jpeg" } })).verdict);
     }
 
     expect(verdicts.size).toBe(3);

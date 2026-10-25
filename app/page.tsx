@@ -29,7 +29,7 @@ export default function HomePage() {
       </main>
 
       <footer className="footer">
-        <p>AnalIA · Etapa 1 de 6</p>
+        <p>AnalIA · Etapa 2 de 6</p>
         <nav aria-label="Enlaces legales">
           <Link href="/privacidad">Privacidad</Link>
         </nav>

@@ -35,54 +35,111 @@ export class ImageError extends Error {
   }
 }
 
-export async function prepareImage(file: File): Promise<PreparedImage> {
-  const rejection = validateFile(file);
+type Canvas = HTMLCanvasElement | OffscreenCanvas;
+
+export async function prepareImage(source: Blob): Promise<PreparedImage> {
+  const rejection = validateFile({ size: source.size, type: source.type });
   if (rejection) throw new ImageError(rejection, rejectionMessage(rejection));
 
-  const bitmap = await decode(file);
+  const decoded = await decode(source);
   try {
-    const target = fitWithin(bitmap.width, bitmap.height, MAX_LONG_EDGE);
-    const canvas = render(bitmap, target.width, target.height);
+    const target = fitWithin(decoded.width, decoded.height, MAX_LONG_EDGE);
+    const canvas = render(decoded.image, target.width, target.height);
     const blob = await encode(canvas);
 
     return {
       blob,
       width: target.width,
       height: target.height,
-      originalBytes: file.size,
+      originalBytes: source.size,
     };
   } finally {
-    bitmap.close();
+    decoded.release();
   }
 }
 
-type Canvas = HTMLCanvasElement | OffscreenCanvas;
+type DecodedImage = {
+  image: ImageBitmap | HTMLImageElement;
+  width: number;
+  height: number;
+  release: () => void;
+};
 
 /**
- * Decodifica aplicando la orientación EXIF al dibujar, así una foto vertical no
- * aparece acostada. Si el navegador no puede leer el archivo (por ejemplo, un
- * HEIC en un navegador sin soporte), se traduce a un mensaje entendible.
+ * Tres intentos, de más a menos específico:
+ *
+ * 1. `createImageBitmap` con orientación EXIF.
+ * 2. `createImageBitmap` sin opciones (navegadores viejos).
+ * 3. `<img>` + object URL: el decodificador del navegador es más tolerante con
+ *    algunos archivos de Android (HEIC, fotos de cámara con metadatos raros).
+ *
+ * La tercera vía no es decorativa: `createImageBitmap` puede fallar de forma
+ * intermitente en Android con la misma imagen que un `<img>` decodifica sin
+ * problema. Antes de decirle a la persona que su captura es ilegible, probamos
+ * con el decodificador del navegador.
  */
-async function decode(file: File): Promise<ImageBitmap> {
-  try {
-    return await createImageBitmap(file, { imageOrientation: "from-image" });
-  } catch {
-    try {
-      return await createImageBitmap(file);
-    } catch {
-      throw new ImageError(
-        "unreadable",
-        "No pudimos leer esta imagen. Probá con una captura en JPG o PNG.",
-      );
-    }
+async function decode(blob: Blob): Promise<DecodedImage> {
+  const bitmap = await tryBitmap(blob);
+  if (bitmap) {
+    return {
+      image: bitmap,
+      width: bitmap.width,
+      height: bitmap.height,
+      release: () => bitmap.close(),
+    };
   }
+
+  const element = await tryImageElement(blob);
+  if (element) {
+    return {
+      image: element,
+      width: element.naturalWidth,
+      height: element.naturalHeight,
+      release: () => URL.revokeObjectURL(element.src),
+    };
+  }
+
+  throw new ImageError(
+    "unreadable",
+    "No pudimos leer esta imagen. Probá con una captura en JPG o PNG.",
+  );
+}
+
+async function tryBitmap(blob: Blob): Promise<ImageBitmap | null> {
+  try {
+    return await createImageBitmap(blob, { imageOrientation: "from-image" });
+  } catch {
+    // Seguimos con el siguiente intento.
+  }
+
+  try {
+    return await createImageBitmap(blob);
+  } catch {
+    return null;
+  }
+}
+
+function tryImageElement(blob: Blob): Promise<HTMLImageElement | null> {
+  return new Promise((resolve) => {
+    const url = URL.createObjectURL(blob);
+    const image = new Image();
+    image.decoding = "async";
+
+    image.onload = () => resolve(image);
+    image.onerror = () => {
+      URL.revokeObjectURL(url);
+      resolve(null);
+    };
+
+    image.src = url;
+  });
 }
 
 /**
  * Dibuja la imagen ya orientada sobre un canvas del tamaño final. Fondo blanco
  * explícito: al pasar a JPEG, la transparencia se volvería negra.
  */
-function render(bitmap: ImageBitmap, width: number, height: number): Canvas {
+function render(source: CanvasImageSource, width: number, height: number): Canvas {
   if (typeof OffscreenCanvas !== "undefined") {
     const canvas = new OffscreenCanvas(width, height);
     const context = canvas.getContext("2d");
@@ -92,7 +149,7 @@ function render(bitmap: ImageBitmap, width: number, height: number): Canvas {
     context.fillRect(0, 0, width, height);
     context.imageSmoothingEnabled = true;
     context.imageSmoothingQuality = "high";
-    context.drawImage(bitmap, 0, 0, width, height);
+    context.drawImage(source, 0, 0, width, height);
     return canvas;
   }
 
@@ -105,7 +162,7 @@ function render(bitmap: ImageBitmap, width: number, height: number): Canvas {
   context.fillRect(0, 0, width, height);
   context.imageSmoothingEnabled = true;
   context.imageSmoothingQuality = "high";
-  context.drawImage(bitmap, 0, 0, width, height);
+  context.drawImage(source, 0, 0, width, height);
   return canvas;
 }
 

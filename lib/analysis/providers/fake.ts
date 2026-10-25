@@ -13,7 +13,14 @@ import type { Analysis } from "../contract";
 import { AnalysisError } from "../errors";
 import type { AnalysisInput, AnalysisProvider } from "../provider";
 
-export const FAKE_SCENARIOS = ["auto", "legitimo", "sospechoso", "ambiguo", "error"] as const;
+export const FAKE_SCENARIOS = [
+  "auto",
+  "legitimo",
+  "sospechoso",
+  "ambiguo",
+  "estafa",
+  "error",
+] as const;
 export type FakeScenario = (typeof FAKE_SCENARIOS)[number];
 
 export function parseFakeScenario(value: string | undefined): FakeScenario {
@@ -21,7 +28,7 @@ export function parseFakeScenario(value: string | undefined): FakeScenario {
   return FAKE_SCENARIOS.find((scenario) => scenario === normalized) ?? "auto";
 }
 
-const CASES = ["legitimo", "sospechoso", "ambiguo"] as const;
+const CASES = ["legitimo", "sospechoso", "ambiguo", "estafa"] as const;
 type CaseId = (typeof CASES)[number];
 
 const FIXTURES: Record<CaseId, Analysis> = {
@@ -81,7 +88,45 @@ const FIXTURES: Record<CaseId, Analysis> = {
     escalation: "none",
     hardData: { urls: [], phones: [], senders: [] },
   },
+  estafa: {
+    verdict: "altamente_probable_estafa",
+    title: "Parece una estafa",
+    summary:
+      "El mensaje imita al banco, pide tus datos por un link y amenaza con bloquear la cuenta en 24 horas. Es el patrón clásico de una estafa.",
+    reasons: [
+      "Pide usuario y contraseña por un link, algo que el banco no hace.",
+      "El dominio del link no es el dominio del banco.",
+      "Metía apuro y amenaza con bloquear la cuenta.",
+    ],
+    nextSteps: [
+      "No toques el link ni respondas el mensaje.",
+      "Llamá al banco por el número que figura en tu tarjeta y contales lo que recibiste.",
+      "Si ya diste tus datos, pedí el bloqueo de la cuenta en ese mismo llamado.",
+    ],
+    limits:
+      "No puedo confirmar quién envió el mensaje desde una captura, pero las señales son claras: no lo uses.",
+    escalation: "banking",
+    hardData: { urls: [], phones: [], senders: [] },
+  },
 };
+
+/**
+ * Huella barata del contenido (FNV-1a sobre los primeros 4 KB más el tamaño).
+ * Se usa para que la respuesta dependa de la imagen y no solo de su longitud:
+ * dos capturas distintas del mismo peso no caen siempre en el mismo caso.
+ */
+function fingerprint(bytes: Uint8Array): number {
+  let hash = 0x811c9dc5;
+  const limit = Math.min(bytes.length, 4096);
+
+  for (let index = 0; index < limit; index += 1) {
+    hash ^= bytes[index] ?? 0;
+    hash = Math.imul(hash, 0x01000193);
+  }
+
+  hash ^= bytes.length;
+  return hash >>> 0;
+}
 
 export class FakeAnalysisProvider implements AnalysisProvider {
   readonly name = "fake";
@@ -92,7 +137,7 @@ export class FakeAnalysisProvider implements AnalysisProvider {
   ) {}
 
   async analyze(input: AnalysisInput): Promise<Analysis> {
-    // Latencia simulada, estable para el mismo tamaño de archivo.
+    // Latencia simulada, estable para la misma imagen.
     const latency = this.options.latencyMs ?? 300 + (input.image.bytes.length % 500);
     if (latency > 0) await new Promise((resolve) => setTimeout(resolve, latency));
 
@@ -102,7 +147,7 @@ export class FakeAnalysisProvider implements AnalysisProvider {
 
     const caseId: CaseId =
       this.scenario === "auto"
-        ? (CASES[input.image.bytes.length % CASES.length] ?? "sospechoso")
+        ? (CASES[fingerprint(input.image.bytes) % CASES.length] ?? "sospechoso")
         : this.scenario;
 
     return structuredClone(FIXTURES[caseId]);

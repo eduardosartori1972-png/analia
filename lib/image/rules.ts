@@ -18,7 +18,7 @@ export const MAX_LONG_EDGE = 1600;
 /** Calidades que probamos, de mejor a más agresiva. */
 export const QUALITY_LADDER = [0.8, 0.65, 0.5] as const;
 
-export type FileRejection = "too-large" | "not-an-image";
+export type FileRejection = "too-large" | "not-an-image" | "empty";
 
 /**
  * Valida el archivo antes de decodificarlo. No miramos la extensión: miramos
@@ -27,6 +27,7 @@ export type FileRejection = "too-large" | "not-an-image";
  * el decodificado, que es la única prueba real.
  */
 export function validateFile(file: { size: number; type: string }): FileRejection | null {
+  if (file.size === 0) return "empty";
   if (file.size > MAX_INPUT_BYTES) return "too-large";
   if (file.type !== "" && !file.type.startsWith("image/")) return "not-an-image";
   return null;
@@ -34,6 +35,8 @@ export function validateFile(file: { size: number; type: string }): FileRejectio
 
 export function rejectionMessage(reason: FileRejection): string {
   switch (reason) {
+    case "empty":
+      return "El archivo está vacío. Probá con otra captura.";
     case "too-large":
       return "La imagen pesa más de 10 MB. Probá con otra captura.";
     case "not-an-image":
