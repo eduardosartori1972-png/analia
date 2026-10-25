@@ -31,13 +31,20 @@ pnpm test
 
 **Contra el proveedor real (manual, consume cuota):**
 
-```bash
-ANALYZE_LIVE=1 ANALYZE_PROVIDER=deepseek ANALYZE_API_KEY=... pnpm test
+```powershell
+$env:ANALYZE_LIVE="1"; pnpm test
 ```
 
-Ahí manda la `capture.png` de cada caso y el modelo decide. Un caso que falla es un
-hallazgo para revisar el prompt, no un bug del test: el runner imprime veredicto, latencia
-y motivo.
+Solo los cuatro casos:
+
+```powershell
+$env:ANALYZE_LIVE="1"; pnpm exec vitest run tests/evals.live.test.ts
+```
+
+Las variables de `.env.local` las carga `vitest.config.ts`: Vitest, a diferencia de Next,
+no las vuelca en `process.env` por su cuenta. Ahí manda la `capture.png` de cada caso y el
+modelo decide. Un caso que falla es un hallazgo para revisar el prompt, no un bug del test:
+el runner imprime veredicto, latencia y motivo.
 
 ## Qué verifica cada corrida
 

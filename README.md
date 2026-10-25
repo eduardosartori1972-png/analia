@@ -22,11 +22,21 @@ señales de estafa y qué conviene hacer.
    ```
 
 3. Reiniciar `pnpm dev`.
-4. Correr el corpus contra el proveedor real:
+4. Correr el corpus contra el proveedor real (PowerShell):
 
-   ```bash
-   ANALYZE_LIVE=1 pnpm test
+   ```powershell
+   $env:ANALYZE_LIVE="1"; pnpm test
    ```
+
+   Solo los cuatro casos, sin el resto de la suite:
+
+   ```powershell
+   $env:ANALYZE_LIVE="1"; pnpm exec vitest run tests/evals.live.test.ts
+   ```
+
+   `vitest.config.ts` carga las variables de `.env.local`, igual que Next. Si
+   `ANALYZE_PROVIDER` quedara en `fake`, la corrida live falla con un mensaje claro en
+   lugar de probar el simulador sin darse cuenta.
 
 Nunca se usa el prefijo `NEXT_PUBLIC_` ni se commitea el archivo. El paso a paso completo,
 incluida la rotación, está en [`docs/KEY-ROTATION.md`](docs/KEY-ROTATION.md).
