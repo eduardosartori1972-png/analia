@@ -4,11 +4,12 @@ Asistente digital para adultos mayores. El usuario sube una captura de un mensaj
 correo o ventana que le genera duda y AnalIA le responde, en palabras simples, si ve
 señales de estafa y qué conviene hacer.
 
-> **Estado: Etapa 3 — adaptador de DeepSeek listo, falta la clave para correr las evals
-> reales.** Por defecto la app sigue usando el Fake Provider. Ya están el prompt v1, la
-> capa de seguridad, la derivación bancaria, la cadena de respaldo y el corpus de
-> evaluación con capturas sintéticas. Ver [`docs/PLAN.md`](docs/PLAN.md),
-> [`docs/PROVIDERS.md`](docs/PROVIDERS.md) y [`docs/KEY-ROTATION.md`](docs/KEY-ROTATION.md).
+> **Estado: Etapa 3 cerrada y validada con DeepSeek Flash.** Los cuatro casos del corpus
+> pasaron contra el modelo real (3–4 s por imagen) y la suite completa está en verde:
+> 60/60 tests. Siguen el prompt v1, la capa de seguridad, la derivación bancaria, la
+> cadena de respaldo y el corpus con capturas sintéticas. Ver
+> [`docs/PLAN.md`](docs/PLAN.md), [`docs/PROVIDERS.md`](docs/PROVIDERS.md) y
+> [`docs/KEY-ROTATION.md`](docs/KEY-ROTATION.md).
 
 ## Activación del proveedor real
 
@@ -67,20 +68,26 @@ incluida la rotación, está en [`docs/KEY-ROTATION.md`](docs/KEY-ROTATION.md).
 
 ### Estado de verificación
 
-Verificado dentro del sandbox:
+Verificado en esta máquina (Windows, con el `.env.local` real):
 
-- `pnpm install --frozen-lockfile` sin cambios pendientes.
+- **`pnpm test`: 60/60 tests en verde.**
+- **Evals contra DeepSeek Flash: 4/4**, con los veredictos esperados y **3–4 s por
+  imagen** (objetivo: p95 < 8 s). El caso de inyección se comportó como se esperaba: la
+  instrucción escondida en la captura se trató como dato.
 - `pnpm typecheck`, `pnpm lint` y `pnpm format:check`.
 - `pnpm build` completo: 3 rutas estáticas, 2 dinámicas y el icono.
-- `pnpm check:client-bundle`: 12 archivos del bundle, 0 coincidencias.
-- Corpus de evaluación con el Fake Provider: 4/4.
+- `pnpm check:client-bundle`: 12 archivos del bundle, 0 coincidencias, con la clave real
+  presente en `.env.local`.
+
+Verificado además dentro del sandbox de desarrollo:
+
+- Corpus con el Fake Provider: 4/4.
 - Adaptador de DeepSeek contra un servidor local que imita la API: request, header,
   data URL, JSON envuelto en markdown, error 500, JSON inválido y timeout.
 - Endpoint sobre el build de producción: presupuesto, inyección y caída del proveedor.
 
-**Pendiente:** `pnpm test` bajo Vitest (el sandbox bloquea el proceso hijo de esbuild),
-la corrida de las evals contra DeepSeek con tu clave, y la prueba en el teléfono. Antes
-de cerrar la etapa, corré `pnpm verify` en tu máquina.
+**Pendiente para el piloto:** la confirmación escrita de retención y no-entrenamiento del
+proveedor (para publicar `/privacidad` sin el aviso de borrador) y la revisión legal.
 
 ## Requisitos
 

@@ -6,9 +6,9 @@ cambian sin un ADR.
 | Etapa | Alcance                                             | Estado                             |
 | ----- | --------------------------------------------------- | ---------------------------------- |
 | 0     | Fundaciones: repo, CI, esqueleto, ADRs, docs        | **Verificada** — falta tu revisión |
-| 1     | Pantalla de subida mobile-first                     | **Implementada** — a revisión      |
-| 2     | Contrato de análisis, endpoint y Fake Provider      | **Implementada** — a revisión      |
-| 3     | Visión real, respuesta en texto y capa de seguridad | **En curso** — falta proveedor     |
+| 1     | Pantalla de subida mobile-first                     | **Cerrada** — probada en Android   |
+| 2     | Contrato de análisis, endpoint y Fake Provider      | **Cerrada** — probada en Android   |
+| 3     | Visión real, respuesta en texto y capa de seguridad | **Cerrada y validada**             |
 | 4     | Datos duros: links, teléfonos y remitentes          | Pendiente                          |
 | 5     | Los 3 casos de prueba y protocolo de piloto         | Pendiente                          |
 | 6     | Hardening pre-piloto (legal, CSP, monitoreo)        | Pendiente                          |
@@ -144,14 +144,17 @@ modelo controle la redacción final.
 - [x] Banco/tarjeta/contraseña: `escalation: banking` fuerza el bloque de derivación en
       la UI; una estafa probable no puede quedar sin derivación.
 - [x] "Ya hice clic" tiene su propio bloque de derivación.
-- [x] Un intento de inyección no altera el resultado: se descarta en la capa de
-      seguridad (caso `inyeccion` del corpus). **Falta probarlo con el modelo real.**
-- [ ] p95 < 8 s en 4G (depende del proveedor real).
-- [x] 100 % de las evals pasan el safety lint (4 casos, contra el Fake Provider).
+- [x] Un intento de inyección no altera el resultado: **verificado con DeepSeek real**
+      (caso `inyeccion` del corpus, PASS).
+- [x] Latencia: **3 a 4 s por imagen** con DeepSeek Flash, contra un objetivo de p95 < 8 s.
+- [x] 100 % de las evals pasan la capa de seguridad: 4/4 con el Fake Provider y 4/4 con
+      DeepSeek real.
+- [x] Suite completa en verde: 60/60 tests.
 
-> **Estado:** la parte que no depende del proveedor está implementada: prompt v1, capa
-> de seguridad, derivación, reintento, techo mensual y corpus de evaluación. Falta el
-> adaptador del proveedor real y la medición de latencia/costo.
+> **Estado: cerrada y validada con el proveedor real** (2026-10-25). DeepSeek Flash
+> respondió con los cuatro veredictos esperados y la inyección fue tratada como dato.
+> Queda pendiente, fuera del alcance técnico, la confirmación escrita de retención y
+> no-entrenamiento para poder publicar la política de privacidad.
 
 ---
 

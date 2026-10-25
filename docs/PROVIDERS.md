@@ -44,6 +44,11 @@ Se usa **DeepSeek (modelo Flash con visión)** como proveedor primario porque la
 el saldo ya existen y la API es compatible con el formato de OpenAI, así que el adaptador
 es el mismo que usaría cualquier otro proveedor de esa familia.
 
+**Resultado de la primera corrida (2026-10-25):** 4/4 casos con los veredictos
+esperados, **3–4 segundos por imagen** y la inyección escondida en la captura tratada
+como dato. La suite completa quedó en 60/60. El nombre exacto del modelo va en
+`ANALYZE_MODEL`.
+
 Lo que queda por confirmar con el proveedor antes de publicar la política de privacidad:
 no entrenamiento con los datos, plazo de retención y región de procesamiento. Mientras
 eso no esté, la página `/privacidad` sigue marcada como borrador.
