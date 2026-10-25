@@ -1,0 +1,8 @@
+{
+  "id": "ambiguo",
+  "scenario": "ambiguo",
+  "expectedVerdict": "no_pude_analizar",
+  "expectedEscalation": "none",
+  "mustMention": ["captura"],
+  "note": "Captura incompleta. Debe declarar la incertidumbre y pedir una captura mejor, sin arriesgar un veredicto."
+}

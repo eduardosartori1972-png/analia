@@ -8,7 +8,7 @@ cambian sin un ADR.
 | 0     | Fundaciones: repo, CI, esqueleto, ADRs, docs        | **Verificada** — falta tu revisión |
 | 1     | Pantalla de subida mobile-first                     | **Implementada** — a revisión      |
 | 2     | Contrato de análisis, endpoint y Fake Provider      | **Implementada** — a revisión      |
-| 3     | Visión real, respuesta en texto y capa de seguridad | Pendiente                          |
+| 3     | Visión real, respuesta en texto y capa de seguridad | **En curso** — falta proveedor     |
 | 4     | Datos duros: links, teléfonos y remitentes          | Pendiente                          |
 | 5     | Los 3 casos de prueba y protocolo de piloto         | Pendiente                          |
 | 6     | Hardening pre-piloto (legal, CSP, monitoreo)        | Pendiente                          |
@@ -133,17 +133,25 @@ modelo controle la redacción final.
 - Escalado bancario y "ya hice clic".
 - Defensas contra inyección desde el contenido de la imagen.
 - Runner de `evals/`.
+- Reintento único del proveedor y techo mensual de consultas.
 
 **Criterios de aceptación**
 
-- [ ] Nunca aparece "es seguro", "está garantizado" ni "hacé clic".
-- [ ] Toda respuesta tiene: veredicto de la taxonomía, "cómo verificar" y un límite
-      explícito.
-- [ ] Banco, tarjeta o contraseña ⇒ pausa + canal oficial.
-- [ ] "Ya hice clic" ⇒ bloque de derivación.
-- [ ] Un intento de inyección dentro de la captura no altera veredicto ni formato.
-- [ ] p95 < 8 s en 4G, con estado de progreso.
-- [ ] 100 % de las evals pasan el safety lint.
+- [x] Nunca aparece "es seguro", "está garantizado" ni "hacé clic": la capa de
+      seguridad descarta la respuesta entera si aparece una frase prohibida.
+- [x] Toda respuesta tiene veredicto de la taxonomía, pasos de verificación y un límite
+      canónico que no escribe el modelo.
+- [x] Banco/tarjeta/contraseña: `escalation: banking` fuerza el bloque de derivación en
+      la UI; una estafa probable no puede quedar sin derivación.
+- [x] "Ya hice clic" tiene su propio bloque de derivación.
+- [x] Un intento de inyección no altera el resultado: se descarta en la capa de
+      seguridad (caso `inyeccion` del corpus). **Falta probarlo con el modelo real.**
+- [ ] p95 < 8 s en 4G (depende del proveedor real).
+- [x] 100 % de las evals pasan el safety lint (4 casos, contra el Fake Provider).
+
+> **Estado:** la parte que no depende del proveedor está implementada: prompt v1, capa
+> de seguridad, derivación, reintento, techo mensual y corpus de evaluación. Falta el
+> adaptador del proveedor real y la medición de latencia/costo.
 
 ---
 

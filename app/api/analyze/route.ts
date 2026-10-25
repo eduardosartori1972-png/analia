@@ -1,11 +1,15 @@
 import { NextResponse } from "next/server";
 
+import { createMonthlyBudget, resolveMonthlyLimit } from "@/lib/analysis/budget";
+import type { Analysis } from "@/lib/analysis/contract";
 import { analysisSchema } from "@/lib/analysis/contract";
 import { AnalysisError } from "@/lib/analysis/errors";
 import { MAX_SERVER_IMAGE_BYTES, sniffImageType } from "@/lib/analysis/image-guard";
+import type { AnalysisInput, AnalysisProvider } from "@/lib/analysis/provider";
 import { getAnalysisProvider } from "@/lib/analysis/providers";
 import { createRateLimiter } from "@/lib/analysis/rate-limit";
 import { withTimeout } from "@/lib/analysis/timeout";
+import { enforceSafety, SafetyViolation } from "@/lib/safety/policy";
 
 /**
  * Único endpoint que toca la imagen. Vive en memoria: no escribe a disco, ni a
@@ -16,7 +20,8 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 30;
 
-const PROVIDER_TIMEOUT_MS = 20_000;
+const PROVIDER_TIMEOUT_MS = 12_000;
+const MAX_ATTEMPTS = 2;
 const RATE_LIMIT_WINDOW_MS = 10 * 60_000;
 
 function readRateLimit(): number {
@@ -28,6 +33,8 @@ const limiter = createRateLimiter({
   limit: readRateLimit(),
   windowMs: RATE_LIMIT_WINDOW_MS,
 });
+
+const budget = createMonthlyBudget(resolveMonthlyLimit());
 
 function clientIp(request: Request): string {
   const forwarded = request.headers.get("x-forwarded-for");
@@ -48,6 +55,41 @@ function errorResponse(error: AnalysisError, requestId: string) {
   );
 }
 
+/**
+ * Un solo reintento. Si el proveedor falla dos veces seguidas, mostrar el error
+ * es más honesto que hacer esperar a la persona. Con 12 s por intento, el peor
+ * caso queda por debajo de `maxDuration`.
+ *
+ * Los errores del proveedor no se muestran tal cual: se traducen a un mensaje
+ * propio para no filtrar detalles técnicos ni texto ajeno.
+ */
+async function analyzeWithRetry(
+  provider: AnalysisProvider,
+  input: AnalysisInput,
+  requestId: string,
+): Promise<Analysis> {
+  let lastError: unknown;
+
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
+    try {
+      return await withTimeout(provider.analyze(input), PROVIDER_TIMEOUT_MS);
+    } catch (error) {
+      lastError = error;
+      // Solo el código: el mensaje del proveedor puede traer detalles técnicos
+      // o texto que no escribimos nosotros.
+      const code = error instanceof AnalysisError ? error.code : "unknown";
+      console.error(`[analyze] intento ${attempt} falló (${requestId}): ${code}`);
+    }
+  }
+
+  if (lastError instanceof AnalysisError && lastError.code === "timeout") throw lastError;
+
+  throw new AnalysisError(
+    "provider_error",
+    "No pudimos analizar la imagen. Probá de nuevo en un rato.",
+  );
+}
+
 export async function POST(request: Request) {
   const requestId = crypto.randomUUID();
 
@@ -58,6 +100,14 @@ export async function POST(request: Request) {
         "rate_limited",
         "Hiciste varias consultas seguidas. Esperá un momento y volvé a intentar.",
         { retryAfterSeconds: decision.retryAfterSeconds },
+      );
+    }
+
+    const quota = budget();
+    if (!quota.allowed) {
+      throw new AnalysisError(
+        "quota_exhausted",
+        "Llegamos al límite de consultas de este mes. Probá de nuevo el mes que viene.",
       );
     }
 
@@ -97,10 +147,7 @@ export async function POST(request: Request) {
     }
 
     const provider = getAnalysisProvider();
-    const raw = await withTimeout(
-      provider.analyze({ image: { bytes, mimeType } }),
-      PROVIDER_TIMEOUT_MS,
-    );
+    const raw = await analyzeWithRetry(provider, { image: { bytes, mimeType } }, requestId);
 
     const parsed = analysisSchema.safeParse(raw);
     if (!parsed.success) {
@@ -112,8 +159,25 @@ export async function POST(request: Request) {
       );
     }
 
+    let safe: Analysis;
+    try {
+      safe = enforceSafety(parsed.data);
+    } catch (error) {
+      if (error instanceof SafetyViolation) {
+        // Se registran las reglas, nunca el texto: puede contener datos del usuario.
+        console.error(
+          `[analyze] respuesta bloqueada por seguridad (${requestId}): ${error.rules.join(",")}`,
+        );
+        throw new AnalysisError(
+          "invalid_response",
+          "El análisis no salió como esperábamos. Probá de nuevo.",
+        );
+      }
+      throw error;
+    }
+
     return NextResponse.json(
-      { analysis: parsed.data, requestId },
+      { analysis: safe, requestId },
       { headers: { "Cache-Control": "no-store" } },
     );
   } catch (error) {

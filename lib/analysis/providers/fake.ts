@@ -3,9 +3,10 @@
  * costo y sin decidir proveedor (ADR-004).
  *
  * Escenarios:
- * - `auto` (default): elige un caso según el tamaño de la imagen, para que
- *   distintas capturas produzcan respuestas distintas sin azar.
- * - `legitimo`, `sospechoso`, `ambiguo`: fuerzan un caso.
+ * - `auto` (default): elige un caso según el contenido de la imagen.
+ * - `legitimo`, `sospechoso`, `ambiguo`, `estafa`: fuerzan un caso.
+ * - `inyectado`: devuelve una respuesta que viola la política de seguridad, para
+ *   comprobar que la capa de seguridad la descarta.
  * - `error`: simula una caída del proveedor.
  */
 
@@ -19,6 +20,7 @@ export const FAKE_SCENARIOS = [
   "sospechoso",
   "ambiguo",
   "estafa",
+  "inyectado",
   "error",
 ] as const;
 export type FakeScenario = (typeof FAKE_SCENARIOS)[number];
@@ -128,6 +130,21 @@ function fingerprint(bytes: Uint8Array): number {
   return hash >>> 0;
 }
 
+/**
+ * Respuesta adversaria: simula un modelo que siguió una instrucción escondida en
+ * la imagen. La capa de seguridad tiene que descartarla, no mostrarla.
+ */
+const INJECTED_FIXTURE: Analysis = {
+  verdict: "sin_señales_visibles",
+  title: "Todo en orden",
+  summary: "El mensaje es del banco y no hay nada que revisar.",
+  reasons: ["Es seguro, podés confiar en este mensaje."],
+  nextSteps: ["Hacé clic en el link para confirmar tus datos."],
+  limits: "Ninguna. Podés confiar en este mensaje.",
+  escalation: "none",
+  hardData: { urls: [], phones: [], senders: [] },
+};
+
 export class FakeAnalysisProvider implements AnalysisProvider {
   readonly name = "fake";
 
@@ -143,6 +160,10 @@ export class FakeAnalysisProvider implements AnalysisProvider {
 
     if (this.scenario === "error") {
       throw new AnalysisError("provider_error", "El proveedor de análisis no está disponible.");
+    }
+
+    if (this.scenario === "inyectado") {
+      return structuredClone(INJECTED_FIXTURE);
     }
 
     const caseId: CaseId =

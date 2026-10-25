@@ -7,6 +7,7 @@ export type AnalysisErrorCode =
   | "invalid_image"
   | "too_large"
   | "rate_limited"
+  | "quota_exhausted"
   | "timeout"
   | "provider_error"
   | "invalid_response";
@@ -15,6 +16,7 @@ const HTTP_STATUS: Record<AnalysisErrorCode, number> = {
   invalid_image: 415,
   too_large: 413,
   rate_limited: 429,
+  quota_exhausted: 429,
   timeout: 504,
   provider_error: 502,
   invalid_response: 502,

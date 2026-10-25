@@ -4,10 +4,10 @@ Asistente digital para adultos mayores. El usuario sube una captura de un mensaj
 correo o ventana que le genera duda y AnalIA le responde, en palabras simples, si ve
 señales de estafa y qué conviene hacer.
 
-> **Estado: Etapa 2 de 6 — análisis simulado.** La app ya reacciona a la captura: la
-> comprime, la envía a `POST /api/analyze` y muestra un veredicto con razones y pasos a
-> seguir. El proveedor todavía es simulado (Fake Provider); no hay llamada a un modelo
-> real. Ver [`docs/PLAN.md`](docs/PLAN.md).
+> **Estado: Etapa 3 en curso — falta el proveedor real.** La app ya analiza y responde,
+> pero con el Fake Provider. Ya están el prompt v1, la capa de seguridad que arma el
+> texto final, la derivación bancaria, el reintento y el corpus de evaluación. Ver
+> [`docs/PLAN.md`](docs/PLAN.md) y [`docs/PROVIDERS.md`](docs/PROVIDERS.md).
 
 ## Qué hay para revisar en esta etapa
 
@@ -15,9 +15,11 @@ señales de estafa y qué conviene hacer.
 - Flujo de captura: un solo botón primario, vista previa y compresión en el cliente
   (1600 px de lado mayor, JPEG 0,8, sin EXIF).
 - Análisis: contrato validado con zod, taxonomía de cuatro veredictos, Fake Provider y
-  endpoint con validación por magic bytes, timeout y rate limit por IP.
-- Resultado en pantalla: veredicto, "qué veo", "qué conviene hacer" y un límite
-  explícito que nunca promete seguridad.
+  endpoint con validación por magic bytes, timeout, rate limit y techo mensual.
+- Capa de seguridad: el límite final lo escribe el sistema, no el modelo; seis reglas
+  descartan respuestas con promesas absolutas o instrucciones de clic.
+- Resultado en pantalla: veredicto, "qué veo", "qué conviene hacer", bloque de
+  derivación cuando hay riesgo bancario y límite explícito.
 - Botón primario como ancla visual: verde profundo `#0a4a3c`, 64 px de alto, 22 px de
   etiqueta (ADR-009).
 - Design tokens mobile-first: 20 px de cuerpo, contraste AAA, foco visible,

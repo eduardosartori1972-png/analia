@@ -1,4 +1,5 @@
 import type { Analysis, Verdict } from "@/lib/analysis/contract";
+import { ESCALATION_COPY } from "@/lib/safety/escalation";
 
 /**
  * Etiqueta visible por veredicto. Nunca dice "es seguro": el veredicto más
@@ -13,6 +14,7 @@ const VERDICT_LABEL: Record<Verdict, { label: string; tone: string }> = {
 
 export function AnalysisResult({ analysis }: { analysis: Analysis }) {
   const { label, tone } = VERDICT_LABEL[analysis.verdict];
+  const escalation = analysis.escalation === "none" ? null : ESCALATION_COPY[analysis.escalation];
 
   return (
     <section className={`result result--${tone}`} aria-labelledby="resultado-titulo">
@@ -34,6 +36,13 @@ export function AnalysisResult({ analysis }: { analysis: Analysis }) {
           <li key={index}>{step}</li>
         ))}
       </ol>
+
+      {escalation && (
+        <div className="result__escalation">
+          <h3>{escalation.title}</h3>
+          <p>{escalation.body}</p>
+        </div>
+      )}
 
       <p className="result__limits">{analysis.limits}</p>
     </section>

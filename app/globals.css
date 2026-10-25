@@ -353,6 +353,31 @@ a:hover {
   font-size: 0.9375rem;
 }
 
+/* Derivación: qué hacer si ya hay riesgo. Va antes del límite para que el paso
+   concreto no quede enterrado al final de la tarjeta. */
+.result__escalation {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  margin-top: 0.5rem;
+  padding: 0.875rem 1rem;
+  background-color: #f1ede4;
+  border-radius: var(--radius-md);
+}
+
+.result__escalation h3 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 1.0625rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.result__escalation p {
+  font-size: 1rem;
+}
+
 .preview {
   display: flex;
   flex-direction: column;
