@@ -2,24 +2,34 @@
 
 import { useCallback, useEffect, useRef, useState, type ChangeEvent } from "react";
 
+import { AnalysisResult } from "@/components/analysis-result";
+import { AnalysisClientError, requestAnalysis } from "@/lib/analysis/client";
+import type { Analysis } from "@/lib/analysis/contract";
 import { formatBytes } from "@/lib/image/geometry";
 import { ImageError, prepareImage, type PreparedImage } from "@/lib/image/preprocess";
 
-type UploadState =
+type Capture = { prepared: PreparedImage; previewUrl: string };
+
+type AnalysisState =
   | { status: "idle" }
-  | { status: "preparing" }
-  | { status: "ready"; image: PreparedImage; previewUrl: string }
+  | { status: "loading" }
+  | { status: "done"; analysis: Analysis }
   | { status: "error"; message: string };
 
 /**
- * Punto de entrada de la captura. Un solo botón primario: Android decide si
- * abre la cámara o la galería, sin obligar a elegir entre dos caminos.
+ * Flujo completo de la captura: elegir, comprimir, previsualizar y analizar.
+ * Un solo botón primario en cada paso; el resto es secundario.
  */
 export function CaptureUploader() {
-  const [state, setState] = useState<UploadState>({ status: "idle" });
+  const [preparing, setPreparing] = useState(false);
+  const [capture, setCapture] = useState<Capture | null>(null);
+  const [captureError, setCaptureError] = useState<string | null>(null);
+  const [analysis, setAnalysis] = useState<AnalysisState>({ status: "idle" });
+
   const inputRef = useRef<HTMLInputElement>(null);
   const objectUrlRef = useRef<string | null>(null);
-  const requestRef = useRef(0);
+  const captureRequestRef = useRef(0);
+  const analysisRequestRef = useRef(0);
 
   const releaseUrl = useCallback(() => {
     if (objectUrlRef.current) {
@@ -28,7 +38,6 @@ export function CaptureUploader() {
     }
   }, []);
 
-  // Libera el blob al desmontar: la imagen no debe quedar retenida en memoria.
   useEffect(() => releaseUrl, [releaseUrl]);
 
   const openPicker = useCallback(() => {
@@ -37,63 +46,92 @@ export function CaptureUploader() {
 
   async function handleChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
-    // Permite volver a elegir el mismo archivo después de quitarlo.
     event.target.value = "";
     if (!file) return;
 
-    const request = ++requestRef.current;
-    setState({ status: "preparing" });
+    const request = ++captureRequestRef.current;
+    setPreparing(true);
+    setCaptureError(null);
 
     try {
-      const image = await prepareImage(file);
-      if (request !== requestRef.current) return;
+      const prepared = await prepareImage(file);
+      if (request !== captureRequestRef.current) return;
 
+      analysisRequestRef.current += 1; // descarta un análisis en curso
       releaseUrl();
-      const previewUrl = URL.createObjectURL(image.blob);
+      const previewUrl = URL.createObjectURL(prepared.blob);
       objectUrlRef.current = previewUrl;
-      setState({ status: "ready", image, previewUrl });
+
+      setCapture({ prepared, previewUrl });
+      setAnalysis({ status: "idle" });
     } catch (error) {
-      if (request !== requestRef.current) return;
-      setState({
+      if (request !== captureRequestRef.current) return;
+      setCapture(null);
+      setCaptureError(
+        error instanceof ImageError
+          ? error.message
+          : "No pudimos preparar la imagen. Probá de nuevo.",
+      );
+    } finally {
+      if (request === captureRequestRef.current) setPreparing(false);
+    }
+  }
+
+  async function analyze() {
+    if (!capture) return;
+
+    const request = ++analysisRequestRef.current;
+    setAnalysis({ status: "loading" });
+
+    try {
+      const { analysis: result } = await requestAnalysis(capture.prepared.blob);
+      if (request !== analysisRequestRef.current) return;
+      setAnalysis({ status: "done", analysis: result });
+    } catch (error) {
+      if (request !== analysisRequestRef.current) return;
+      setAnalysis({
         status: "error",
         message:
-          error instanceof ImageError
+          error instanceof AnalysisClientError
             ? error.message
-            : "No pudimos preparar la imagen. Probá de nuevo.",
+            : "No pudimos analizar la imagen. Probá de nuevo en un rato.",
       });
     }
   }
 
-  function reset() {
-    requestRef.current += 1; // descarta cualquier preparación en curso
+  function remove() {
+    captureRequestRef.current += 1;
+    analysisRequestRef.current += 1;
     releaseUrl();
-    setState({ status: "idle" });
+    setCapture(null);
+    setCaptureError(null);
+    setPreparing(false);
+    setAnalysis({ status: "idle" });
   }
+
+  const liveMessage = preparing
+    ? "Preparando la imagen."
+    : analysis.status === "loading"
+      ? "Analizando la imagen."
+      : analysis.status === "done"
+        ? "Análisis listo."
+        : analysis.status === "error"
+          ? "No pudimos analizar la imagen."
+          : capture
+            ? "Imagen lista para analizar."
+            : "";
 
   return (
     <section className="uploader" aria-label="Subir una captura">
       <input ref={inputRef} type="file" accept="image/*" onChange={handleChange} hidden />
 
-      {/* Región viva permanente: el botón desaparece al cambiar de estado y el
-          foco vuelve al body, así que el cambio se anuncia acá. */}
+      {/* Región viva permanente: el botón cambia de estado y el foco vuelve al
+          body, así que el cambio se anuncia acá. */}
       <p className="sr-only" role="status">
-        {state.status === "preparing" && "Preparando la imagen."}
-        {state.status === "ready" && "Imagen lista para analizar."}
-        {state.status === "error" && "No pudimos preparar la imagen."}
+        {liveMessage}
       </p>
 
-      {state.status === "idle" && (
-        <>
-          <button type="button" className="button" onClick={openPicker}>
-            Subir una captura
-          </button>
-          <p className="hint">
-            Podés sacar una foto en el momento o elegir una que ya tengas guardada.
-          </p>
-        </>
-      )}
-
-      {state.status === "preparing" && (
+      {preparing && (
         <>
           <button type="button" className="button" disabled aria-busy="true">
             <span className="spinner" aria-hidden="true" />
@@ -103,46 +141,77 @@ export function CaptureUploader() {
         </>
       )}
 
-      {state.status === "ready" && (
+      {!preparing && !capture && (
+        <>
+          {captureError && (
+            <p className="uploader__error" role="alert">
+              {captureError}
+            </p>
+          )}
+          <button type="button" className="button" onClick={openPicker}>
+            {captureError ? "Elegir otra imagen" : "Subir una captura"}
+          </button>
+          <p className="hint">
+            Podés sacar una foto en el momento o elegir una que ya tengas guardada.
+          </p>
+        </>
+      )}
+
+      {!preparing && capture && (
         <>
           <figure className="preview">
             {/* Blob local: no pasa por el optimizador ni por un CDN (ADR-007). */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               className="preview__image"
-              src={state.previewUrl}
+              src={capture.previewUrl}
               alt="Vista previa de la captura que elegiste"
             />
             <figcaption className="preview__meta">
-              {state.image.width} × {state.image.height} px · {formatBytes(state.image.blob.size)}
+              {capture.prepared.width} × {capture.prepared.height} px ·{" "}
+              {formatBytes(capture.prepared.blob.size)}
             </figcaption>
           </figure>
 
-          <div className="uploader__actions">
-            <button type="button" className="button" disabled aria-describedby="analizar-aviso">
-              Analizar
-            </button>
-            <p className="hint" id="analizar-aviso">
-              El análisis se activa en la próxima etapa.
-            </p>
+          {analysis.status === "idle" && (
+            <div className="uploader__actions">
+              <button type="button" className="button" onClick={analyze}>
+                Analizar
+              </button>
+            </div>
+          )}
+
+          {analysis.status === "loading" && (
+            <div className="uploader__actions">
+              <button type="button" className="button" disabled aria-busy="true">
+                <span className="spinner" aria-hidden="true" />
+                Analizando…
+              </button>
+              <p className="hint">Esto puede tardar unos segundos.</p>
+            </div>
+          )}
+
+          {analysis.status === "error" && (
+            <div className="uploader__actions">
+              <p className="uploader__error" role="alert">
+                {analysis.message}
+              </p>
+              <button type="button" className="button" onClick={analyze}>
+                Probar de nuevo
+              </button>
+            </div>
+          )}
+
+          {analysis.status === "done" && <AnalysisResult analysis={analysis.analysis} />}
+
+          <div className="uploader__secondary">
             <button type="button" className="button button--secondary" onClick={openPicker}>
               Cambiar la captura
             </button>
-            <button type="button" className="button-text" onClick={reset}>
+            <button type="button" className="button-text" onClick={remove}>
               Quitar
             </button>
           </div>
-        </>
-      )}
-
-      {state.status === "error" && (
-        <>
-          <p className="uploader__error" role="alert">
-            {state.message}
-          </p>
-          <button type="button" className="button" onClick={openPicker}>
-            Elegir otra imagen
-          </button>
         </>
       )}
     </section>

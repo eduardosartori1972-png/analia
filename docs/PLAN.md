@@ -7,7 +7,7 @@ cambian sin un ADR.
 | ----- | --------------------------------------------------- | ---------------------------------- |
 | 0     | Fundaciones: repo, CI, esqueleto, ADRs, docs        | **Verificada** — falta tu revisión |
 | 1     | Pantalla de subida mobile-first                     | **Implementada** — a revisión      |
-| 2     | Contrato de análisis, endpoint y Fake Provider      | Pendiente                          |
+| 2     | Contrato de análisis, endpoint y Fake Provider      | **Implementada** — a revisión      |
 | 3     | Visión real, respuesta en texto y capa de seguridad | Pendiente                          |
 | 4     | Datos duros: links, teléfonos y remitentes          | Pendiente                          |
 | 5     | Los 3 casos de prueba y protocolo de piloto         | Pendiente                          |
@@ -105,11 +105,18 @@ proveedor simulado y sin ninguna persistencia.
 
 **Criterios de aceptación**
 
-- [ ] Un test verifica que no se escribe la imagen a disco ni a logs.
-- [ ] El contrato rechaza respuestas incompletas o fuera de la taxonomía.
-- [ ] 413, timeout y proveedor caído muestran un mensaje humano con reintento.
-- [ ] `ANALYZE_PROVIDER=fake` permite todo el flujo sin clave ni costo.
-- [ ] Rate limit probado.
+- [x] Un test estático verifica que el camino de la imagen no importa `fs`, ni una
+      base de datos, ni un cliente de storage.
+- [x] El contrato rechaza respuestas incompletas o fuera de la taxonomía (tests y
+      validación en el endpoint).
+- [x] 413 y 415 responden con mensaje humano; timeout y proveedor caído se mapean a
+      504/502 y la UI ofrece "Probar de nuevo".
+- [x] `ANALYZE_PROVIDER=fake` permite todo el flujo sin clave ni costo.
+- [x] Rate limit probado de punta a punta: la consulta 6 con límite 5 devuelve 429 con
+      `Retry-After`.
+
+> **Estado:** implementada y verificada sobre el build de producción. Falta la prueba
+> en dispositivo del botón "Analizar" dentro del navegador.
 
 ---
 

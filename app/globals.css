@@ -269,6 +269,90 @@ a:hover {
   font-size: 1rem;
 }
 
+.uploader__secondary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+/* Resultado del análisis. El color acompaña, pero el veredicto se lee:
+   nunca depende solo del tono. */
+.result {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.25rem;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-left: 8px solid #8a8578;
+  border-radius: var(--radius-button);
+}
+
+.result--neutral {
+  border-left-color: #3f6b5b;
+}
+
+.result--suspicious {
+  border-left-color: #b26a00;
+  background-color: #fffdf7;
+}
+
+.result--danger {
+  border-left-color: #9b2f1d;
+  background-color: #fffaf8;
+}
+
+.result--unknown {
+  border-left-color: #8a8578;
+}
+
+.result__verdict {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.result h2 {
+  font-size: 1.5rem;
+}
+
+.result h3 {
+  margin: 0.5rem 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.result__summary {
+  font-size: 1.125rem;
+}
+
+.result__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.result__list li {
+  max-width: 58ch;
+}
+
+.result__limits {
+  margin-top: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  font-size: 0.9375rem;
+}
+
 .preview {
   display: flex;
   flex-direction: column;
