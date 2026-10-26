@@ -1,5 +1,6 @@
 import type { Analysis } from "../contract";
 import { AnalysisError } from "../errors";
+import { parseModelJson } from "../json";
 import type { AnalysisInput, AnalysisProvider } from "../provider";
 import { loadSystemPrompt } from "../prompt";
 
@@ -95,7 +96,7 @@ class OpenAiCompatibleProvider implements AnalysisProvider {
       throw new AnalysisError("invalid_response", "El proveedor devolvió una respuesta vacía.");
     }
 
-    return parseJsonObject(content);
+    return parseModelJson(content) as Analysis;
   }
 }
 
@@ -111,27 +112,4 @@ function extractContent(payload: unknown): string | null {
   const choices = (payload as ChatPayload | null)?.choices;
   const content = choices?.[0]?.message?.content;
   return typeof content === "string" && content.trim().length > 0 ? content : null;
-}
-
-/**
- * Algunos proveedores envuelven el JSON en un bloque markdown aunque se les pida
- * JSON puro. Se tolera, no se confía: la validación real la hace zod después.
- */
-function parseJsonObject(content: string): Analysis {
-  const cleaned = content
-    .trim()
-    .replace(/^```(?:json)?\s*/i, "")
-    .replace(/\s*```$/, "");
-
-  const start = cleaned.indexOf("{");
-  const end = cleaned.lastIndexOf("}");
-  if (start === -1 || end === -1 || end <= start) {
-    throw new AnalysisError("invalid_response", "El proveedor no devolvió un JSON válido.");
-  }
-
-  try {
-    return JSON.parse(cleaned.slice(start, end + 1)) as Analysis;
-  } catch {
-    throw new AnalysisError("invalid_response", "El proveedor no devolvió un JSON válido.");
-  }
 }
