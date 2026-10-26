@@ -65,6 +65,9 @@ function buildProvider(id: string, source: Source): AnalysisProvider | null {
 /**
  * Devuelve el proveedor primario, envuelto en la cadena de respaldo si hay uno
  * configurado. Si el primario y el respaldo son el mismo, no se duplica.
+ *
+ * Un respaldo mal configurado no puede tumbar al primario: si falta su clave o
+ * su modelo, se deshabilita con un aviso en los logs y se sigue con uno solo.
  */
 export function getAnalysisProvider(): AnalysisProvider {
   const primaryId = (process.env.ANALYZE_PROVIDER ?? "fake").trim().toLowerCase();
@@ -73,10 +76,19 @@ export function getAnalysisProvider(): AnalysisProvider {
   const primary = buildProvider(primaryId, "primary");
   if (!primary) throw new Error(`Proveedor de análisis no soportado: "${primaryId}".`);
 
-  const fallback =
-    fallbackId !== "none" && fallbackId !== primaryId
-      ? buildProvider(fallbackId, "fallback")
-      : null;
+  let fallback: AnalysisProvider | null = null;
+
+  if (fallbackId !== "none" && fallbackId !== primaryId) {
+    try {
+      fallback = buildProvider(fallbackId, "fallback");
+      if (!fallback) {
+        console.error(`[analysis] respaldo "${fallbackId}" desconocido; se usa solo el primario.`);
+      }
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : "error desconocido";
+      console.error(`[analysis] respaldo "${fallbackId}" deshabilitado: ${detail}`);
+    }
+  }
 
   return new FailoverProvider(fallback ? [primary, fallback] : [primary]);
 }

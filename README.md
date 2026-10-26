@@ -179,7 +179,6 @@ Si algo de esto falla, la etapa no está terminada.
 
 ## Qué no existe todavía (a propósito)
 
-- Proveedor de visión real: el análisis es simulado.
 - Datos duros (links, teléfonos, remitentes) y sus resaltados.
 - Base de datos, auth y analytics.
 - Anotaciones sobre la imagen.
@@ -187,5 +186,5 @@ Si algo de esto falla, la etapa no está terminada.
 
 ## Deploy
 
-Vercel. Configurar la región de funciones en `gru1` y no commitear variables de
-entorno. Ver ADR-007.
+Vercel, región `gru1` (ADR-007). El paso a paso del preview, con las variables de
+entorno y la verificación del prompt, está en [`docs/DEPLOY.md`](docs/DEPLOY.md).

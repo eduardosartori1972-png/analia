@@ -2,10 +2,10 @@
   "name": "analia",
   "version": "0.1.0",
   "private": true,
-  "description": "AnalIA — asistente digital para adultos mayores. MVP Etapa 0: esqueleto.",
+  "description": "AnalIA — asistente digital para adultos mayores que ayuda a detectar señales de estafa en una captura.",
   "packageManager": "pnpm@11.28.5",
   "engines": {
-    "node": ">=20.9.0"
+    "node": "24.x"
   },
   "scripts": {
     "dev": "next dev",

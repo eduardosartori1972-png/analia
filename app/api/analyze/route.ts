@@ -20,6 +20,8 @@ import { enforceSafety, SafetyViolation } from "@/lib/safety/policy";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 30;
+// ADR-007: São Paulo, por latencia desde Argentina.
+export const preferredRegion = "gru1";
 
 const RATE_LIMIT_WINDOW_MS = 10 * 60_000;
 
