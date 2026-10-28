@@ -120,6 +120,8 @@ describe("adaptador compatible con OpenAI", () => {
     expect(lastBody.model).toBe("deepseek-flash");
     expect(lastBody.response_format).toEqual({ type: "json_object" });
     expect(lastBody.stream).toBe(false);
+    expect(lastBody.temperature).toBe(0);
+    expect(lastBody.max_tokens).toBe(4096);
 
     const messages = lastBody.messages as Array<{ role: string; content: unknown }>;
     expect(messages[0]?.role).toBe("system");

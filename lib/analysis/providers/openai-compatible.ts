@@ -64,7 +64,7 @@ class OpenAiCompatibleProvider implements AnalysisProvider {
       // Temperatura 0: es una tarea de extracción, no de redacción libre. Menos
       // variación, menos formato raro.
       temperature: 0,
-      max_tokens: this.config.maxTokens ?? 900,
+      max_tokens: this.config.maxTokens ?? 4096,
       stream: false,
     };
 

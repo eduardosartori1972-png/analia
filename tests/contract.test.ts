@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { analysisResponseSchema, analysisSchema } from "@/lib/analysis/contract";
+import { CANONICAL_LIMITS, enforceSafety } from "@/lib/safety/policy";
 
 const validAnalysis = {
   verdict: "señales_sospechosas" as const,
@@ -37,12 +38,15 @@ describe("analysisSchema", () => {
     expect(parsed.success).toBe(false);
   });
 
-  it("exige el límite explícito", () => {
+  it("tolera que el modelo omita limits y lo completa el sistema", () => {
     const withoutLimits: Record<string, unknown> = { ...validAnalysis };
     delete withoutLimits["limits"];
 
-    const parsed = analysisSchema.safeParse(withoutLimits);
-    expect(parsed.success).toBe(false);
+    const parsed = analysisSchema.parse(withoutLimits);
+    expect(parsed.limits).toBe("");
+
+    const safe = enforceSafety(parsed);
+    expect(safe.limits).toBe(CANONICAL_LIMITS[parsed.verdict]);
   });
 
   it("descarta campos que no son del contrato", () => {

@@ -11,7 +11,7 @@ import path from "node:path";
 
 let cached: string | null = null;
 
-export const PROMPT_VERSION = "system.v2";
+export const PROMPT_VERSION = "system.v3";
 
 export function loadSystemPrompt(): string {
   if (cached) return cached;

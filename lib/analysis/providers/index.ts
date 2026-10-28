@@ -31,6 +31,16 @@ function readEnv(source: Source, suffix: string): string | undefined {
   return process.env[`${prefix}${suffix}`];
 }
 
+/**
+ * Espacio para la respuesta. 4096 por defecto: alcanza para que el modelo
+ * termine el JSON aunque arranque con una frase de más. El costo real depende
+ * de lo que escriba, no del tope.
+ */
+function readMaxTokens(source: Source): number | undefined {
+  const configured = Number(readEnv(source, "MAX_TOKENS") ?? "");
+  return Number.isFinite(configured) && configured >= 256 ? configured : undefined;
+}
+
 function buildCloudProvider(id: string, source: Source): AnalysisProvider {
   const apiKey = readEnv(source, "API_KEY");
   if (!apiKey) {
@@ -47,7 +57,13 @@ function buildCloudProvider(id: string, source: Source): AnalysisProvider {
   const baseUrl = readEnv(source, "BASE_URL") ?? DEFAULT_BASE_URL[id];
   if (!baseUrl) throw new Error(`Falta la URL base para el proveedor "${id}".`);
 
-  return createOpenAiCompatibleProvider({ name: id, baseUrl, apiKey, model });
+  return createOpenAiCompatibleProvider({
+    name: id,
+    baseUrl,
+    apiKey,
+    model,
+    maxTokens: readMaxTokens(source),
+  });
 }
 
 function buildProvider(id: string, source: Source): AnalysisProvider | null {

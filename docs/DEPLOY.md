@@ -39,16 +39,17 @@ git push -u origin main
 En **Settings → Environment Variables**, cargar para **Production** y **Preview**
 (marcar también Development si se usa `vercel dev`):
 
-| Nombre                       | Valor            | Notas                                            |
-| ---------------------------- | ---------------- | ------------------------------------------------ |
-| `ANALYZE_PROVIDER`           | `deepseek`       |                                                  |
-| `ANALYZE_API_KEY`            | la clave real    | marcar **Sensitive**: no se puede leer después   |
-| `ANALYZE_MODEL`              | `deepseek-flash` | nombre exacto del modelo en tu cuenta            |
-| `ANALYZE_COST_PER_CALL_USD`  | `0.0003`         | habilita el tope por presupuesto                 |
-| `ANALYZE_MONTHLY_LIMIT`      | `100`            | tope de consultas del piloto                     |
-| `ANALYZE_MONTHLY_BUDGET_USD` | `3`              |                                                  |
-| `ANALYZE_FALLBACK_PROVIDER`  | `none`           | cambiar a `openai` recién cuando exista su clave |
-| `ANALYZE_RATE_LIMIT`         | `30`             | consultas por IP cada 10 minutos                 |
+| Nombre                       | Valor            | Notas                                                         |
+| ---------------------------- | ---------------- | ------------------------------------------------------------- |
+| `ANALYZE_PROVIDER`           | `deepseek`       |                                                               |
+| `ANALYZE_API_KEY`            | la clave real    | marcar **Sensitive**: no se puede leer después                |
+| `ANALYZE_MODEL`              | `deepseek-flash` | nombre exacto del modelo en tu cuenta                         |
+| `ANALYZE_MAX_TOKENS`         | `4096`           | espacio para la respuesta; el costo depende de lo que escriba |
+| `ANALYZE_COST_PER_CALL_USD`  | `0.0003`         | habilita el tope por presupuesto                              |
+| `ANALYZE_MONTHLY_LIMIT`      | `100`            | tope de consultas del piloto                                  |
+| `ANALYZE_MONTHLY_BUDGET_USD` | `3`              |                                                               |
+| `ANALYZE_FALLBACK_PROVIDER`  | `none`           | cambiar a `openai` recién cuando exista su clave              |
+| `ANALYZE_RATE_LIMIT`         | `30`             | consultas por IP cada 10 minutos                              |
 
 Reglas:
 

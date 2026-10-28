@@ -33,8 +33,11 @@ export const analysisSchema = z.object({
   reasons: z.array(z.string().min(4).max(240)).min(1).max(4),
   /** Qué conviene hacer: 1 a 3 pasos, el primero siempre es verificar. */
   nextSteps: z.array(z.string().min(4).max(240)).min(1).max(3),
-  /** Límite explícito de la respuesta. Obligatorio. */
-  limits: z.string().min(10).max(400),
+  /**
+   * Frase de cierre. El modelo puede omitirla: la escribe el sistema con
+   * `CANONICAL_LIMITS` y nunca se muestra la del modelo. Si viene, se descarta.
+   */
+  limits: z.string().max(400).default(""),
   // Si el modelo omite estos dos, se completan con el valor seguro. La capa de
   // seguridad vuelve a forzar `banking` en una estafa probable.
   escalation: z.enum(ESCALATIONS).default("none"),
