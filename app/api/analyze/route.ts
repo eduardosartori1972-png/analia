@@ -5,6 +5,7 @@ import type { Analysis } from "@/lib/analysis/contract";
 import { analysisSchema } from "@/lib/analysis/contract";
 import { AnalysisError } from "@/lib/analysis/errors";
 import { MAX_SERVER_IMAGE_BYTES, sniffImageType } from "@/lib/analysis/image-guard";
+import { USER_MESSAGES } from "@/lib/analysis/messages";
 import { getAnalysisProvider } from "@/lib/analysis/providers";
 import { createRateLimiter } from "@/lib/analysis/rate-limit";
 import { enforceSafety, SafetyViolation } from "@/lib/safety/policy";
@@ -51,7 +52,9 @@ function errorResponse(error: AnalysisError, requestId: string) {
   if (error.retryAfterSeconds) headers["Retry-After"] = String(error.retryAfterSeconds);
 
   return NextResponse.json(
-    { error: { code: error.code, message: error.message }, requestId },
+    // El mensaje sale del catálogo, no del error: los mensajes técnicos del
+    // proveedor o del parser nunca llegan a la pantalla.
+    { error: { code: error.code, message: USER_MESSAGES[error.code] }, requestId },
     { status: error.status, headers },
   );
 }

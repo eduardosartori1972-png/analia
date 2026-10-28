@@ -1,6 +1,6 @@
 import type { Analysis } from "../contract";
 import { AnalysisError } from "../errors";
-import { parseModelJson } from "../json";
+import { describeShape, parseModelJson } from "../json";
 import type { AnalysisInput, AnalysisProvider } from "../provider";
 import { loadSystemPrompt } from "../prompt";
 
@@ -49,7 +49,9 @@ class OpenAiCompatibleProvider implements AnalysisProvider {
           content: [
             {
               type: "text",
-              text: "Analizá la captura y devolvé solo el objeto JSON del contrato, sin texto adicional.",
+              text:
+                "Analizá la captura. Respondé únicamente con el objeto JSON del contrato: " +
+                "sin saludos, sin explicaciones y sin bloques de código. Empezá en { y terminá en }.",
             },
             {
               type: "image_url",
@@ -59,7 +61,9 @@ class OpenAiCompatibleProvider implements AnalysisProvider {
         },
       ],
       response_format: { type: "json_object" },
-      temperature: 0.2,
+      // Temperatura 0: es una tarea de extracción, no de redacción libre. Menos
+      // variación, menos formato raro.
+      temperature: 0,
       max_tokens: this.config.maxTokens ?? 900,
       stream: false,
     };
@@ -96,7 +100,17 @@ class OpenAiCompatibleProvider implements AnalysisProvider {
       throw new AnalysisError("invalid_response", "El proveedor devolvió una respuesta vacía.");
     }
 
-    return parseModelJson(content) as Analysis;
+    try {
+      return parseModelJson(content) as Analysis;
+    } catch (error) {
+      // Diagnóstico sin contenido: ni texto del modelo ni datos de la imagen.
+      console.error(
+        `[analysis] ${this.name} devolvió JSON inválido (${describeShape(content)}, finish=${
+          finishReason(payload) ?? "-"
+        })`,
+      );
+      throw error;
+    }
   }
 }
 
@@ -105,8 +119,14 @@ function toDataUrl(bytes: Uint8Array, mimeType: string): string {
 }
 
 type ChatPayload = {
-  choices?: Array<{ message?: { content?: unknown } }>;
+  choices?: Array<{ message?: { content?: unknown }; finish_reason?: unknown }>;
 };
+
+/** `length` acá significa que la respuesta se cortó por max_tokens. */
+function finishReason(payload: unknown): string | null {
+  const reason = (payload as ChatPayload | null)?.choices?.[0]?.finish_reason;
+  return typeof reason === "string" ? reason : null;
+}
 
 function extractContent(payload: unknown): string | null {
   const choices = (payload as ChatPayload | null)?.choices;

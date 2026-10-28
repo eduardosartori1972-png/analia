@@ -48,6 +48,31 @@ describe("parseModelJson", () => {
     expect(parsed).toEqual({ summary: "Dice “verificá” y no usa link." });
   });
 
+  it("toma el primer objeto válido aunque haya otro después", () => {
+    expect(parseModelJson('{"a":1}\n{"b":2}')).toEqual({ a: 1 });
+  });
+
+  it("no confunde un fragmento entre llaves con el objeto bueno", () => {
+    expect(parseModelJson('Nota {rara}: {"verdict":"x"}')).toEqual({ verdict: "x" });
+  });
+
+  it("desenvuelve un JSON que vino como string", () => {
+    expect(parseModelJson(JSON.stringify('{"verdict":"x"}'))).toEqual({ verdict: "x" });
+  });
+
+  it("tolera un objeto truncado", () => {
+    expect(parseModelJson('{"verdict":"x","title":"corte')).toEqual({
+      verdict: "x",
+      title: "corte",
+    });
+  });
+
+  it("respeta llaves dentro de un string", () => {
+    expect(parseModelJson('{"a":"texto con } y { adentro"}')).toEqual({
+      a: "texto con } y { adentro",
+    });
+  });
+
   it("rechaza texto sin objeto", () => {
     expect(() => parseModelJson("No puedo analizar esta imagen.")).toThrow(AnalysisError);
   });
