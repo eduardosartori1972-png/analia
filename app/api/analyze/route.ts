@@ -132,8 +132,9 @@ export async function POST(request: Request) {
 
     const parsed = analysisSchema.safeParse(raw);
     if (!parsed.success) {
-      // Sin contenido de la imagen ni texto del usuario: solo el identificador.
-      console.error(`[analyze] respuesta inválida del proveedor "${provider.name}" (${requestId})`);
+      // Solo los campos que fallaron, nunca los valores: pueden tener datos del usuario.
+      const fields = parsed.error.issues.map((issue) => issue.path.join(".") || "raíz").join(",");
+      console.error(`[analyze] contrato inválido (${requestId}): campos=${fields}`);
       throw new AnalysisError(
         "invalid_response",
         "El análisis no salió como esperábamos. Probá de nuevo.",

@@ -18,25 +18,34 @@ export const VERDICTS = [
 
 export const ESCALATIONS = ["none", "banking", "already-clicked"] as const;
 
+/**
+ * Los máximos son topes de cordura, no de tipografía: el prompt pide textos más
+ * cortos, pero una respuesta buena no se rechaza porque el resumen tenga veinte
+ * caracteres de más. La UI sabe envolver.
+ */
 export const analysisSchema = z.object({
   verdict: z.enum(VERDICTS),
   /** Titular corto, en segunda persona y sin jerga. */
-  title: z.string().min(4).max(80),
+  title: z.string().min(4).max(100),
   /** Una o dos frases que resumen qué se ve. */
-  summary: z.string().min(10).max(400),
+  summary: z.string().min(10).max(600),
   /** Qué veo: 1 a 4 observaciones concretas. */
-  reasons: z.array(z.string().min(4).max(200)).min(1).max(4),
+  reasons: z.array(z.string().min(4).max(240)).min(1).max(4),
   /** Qué conviene hacer: 1 a 3 pasos, el primero siempre es verificar. */
-  nextSteps: z.array(z.string().min(4).max(200)).min(1).max(3),
+  nextSteps: z.array(z.string().min(4).max(240)).min(1).max(3),
   /** Límite explícito de la respuesta. Obligatorio. */
-  limits: z.string().min(10).max(300),
-  escalation: z.enum(ESCALATIONS),
+  limits: z.string().min(10).max(400),
+  // Si el modelo omite estos dos, se completan con el valor seguro. La capa de
+  // seguridad vuelve a forzar `banking` en una estafa probable.
+  escalation: z.enum(ESCALATIONS).default("none"),
   /** Datos duros detectados. Se completa en la Etapa 4. */
-  hardData: z.object({
-    urls: z.array(z.string().max(300)).max(5),
-    phones: z.array(z.string().max(40)).max(5),
-    senders: z.array(z.string().max(120)).max(5),
-  }),
+  hardData: z
+    .object({
+      urls: z.array(z.string().max(300)).max(5),
+      phones: z.array(z.string().max(40)).max(5),
+      senders: z.array(z.string().max(120)).max(5),
+    })
+    .default({ urls: [], phones: [], senders: [] }),
 });
 
 export type Analysis = z.infer<typeof analysisSchema>;

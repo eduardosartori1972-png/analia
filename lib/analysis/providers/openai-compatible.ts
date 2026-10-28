@@ -95,18 +95,25 @@ class OpenAiCompatibleProvider implements AnalysisProvider {
     }
 
     const payload: unknown = await response.json().catch(() => null);
-    const content = extractContent(payload);
-    if (content === null) {
+    const extracted = extractContent(payload);
+
+    if (extracted.content === null) {
+      // Sin contenido no hay nada que parsear: hay que registrar por qué.
+      console.error(
+        `[analysis] ${this.name} sin contenido (finish=${extracted.finish ?? "-"}, claves=${
+          extracted.keys.join("|") || "-"
+        })`,
+      );
       throw new AnalysisError("invalid_response", "El proveedor devolvió una respuesta vacía.");
     }
 
     try {
-      return parseModelJson(content) as Analysis;
+      return parseModelJson(extracted.content) as Analysis;
     } catch (error) {
       // Diagnóstico sin contenido: ni texto del modelo ni datos de la imagen.
       console.error(
-        `[analysis] ${this.name} devolvió JSON inválido (${describeShape(content)}, finish=${
-          finishReason(payload) ?? "-"
+        `[analysis] ${this.name} devolvió JSON inválido (${describeShape(extracted.content)}, finish=${
+          extracted.finish ?? "-"
         })`,
       );
       throw error;
@@ -118,8 +125,14 @@ function toDataUrl(bytes: Uint8Array, mimeType: string): string {
   return `data:${mimeType};base64,${Buffer.from(bytes).toString("base64")}`;
 }
 
+type ChatMessage = {
+  content?: unknown;
+  /** Algunos modelos de razonamiento ponen el texto acá cuando `content` viene vacío. */
+  reasoning_content?: unknown;
+};
+
 type ChatPayload = {
-  choices?: Array<{ message?: { content?: unknown }; finish_reason?: unknown }>;
+  choices?: Array<{ message?: ChatMessage; finish_reason?: unknown }>;
 };
 
 /** `length` acá significa que la respuesta se cortó por max_tokens. */
@@ -128,8 +141,37 @@ function finishReason(payload: unknown): string | null {
   return typeof reason === "string" ? reason : null;
 }
 
-function extractContent(payload: unknown): string | null {
-  const choices = (payload as ChatPayload | null)?.choices;
-  const content = choices?.[0]?.message?.content;
-  return typeof content === "string" && content.trim().length > 0 ? content : null;
+function extractContent(payload: unknown): {
+  content: string | null;
+  keys: string[];
+  finish: string | null;
+} {
+  const message = (payload as ChatPayload | null)?.choices?.[0]?.message ?? {};
+  const keys = Object.keys(message);
+  const content = toText(message.content) ?? toText(message.reasoning_content);
+
+  return { content, keys, finish: finishReason(payload) };
+}
+
+/** Acepta string o una lista de partes (algunos proveedores devuelven eso). */
+function toText(value: unknown): string | null {
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    return trimmed.length > 0 ? value : null;
+  }
+
+  if (Array.isArray(value)) {
+    const parts: string[] = [];
+    for (const part of value) {
+      if (typeof part === "string") parts.push(part);
+      else if (part && typeof part === "object" && "text" in part) {
+        const text = (part as { text?: unknown }).text;
+        if (typeof text === "string") parts.push(text);
+      }
+    }
+    const joined = parts.join("").trim();
+    return joined.length > 0 ? joined : null;
+  }
+
+  return null;
 }

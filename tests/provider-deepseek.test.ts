@@ -22,7 +22,7 @@ const FIXTURE = {
   hardData: { urls: [], phones: [], senders: [] },
 };
 
-type Mode = "ok" | "fenced" | "bad-json" | "http-500" | "slow";
+type Mode = "ok" | "fenced" | "bad-json" | "http-500" | "slow" | "parts" | "reasoning" | "empty";
 let mode: Mode = "ok";
 let server: Server;
 let baseUrl = "";
@@ -42,6 +42,11 @@ beforeAll(async () => {
         response.end(JSON.stringify({ choices: [{ message: { content } }] }));
       };
 
+      const sendMessage = (message: unknown) => {
+        response.writeHead(200, { "content-type": "application/json" });
+        response.end(JSON.stringify({ choices: [{ message }] }));
+      };
+
       if (mode === "http-500") {
         response.writeHead(500, { "content-type": "application/json" });
         response.end(JSON.stringify({ error: { message: "detalle interno que no debe salir" } }));
@@ -57,6 +62,20 @@ beforeAll(async () => {
       }
       if (mode === "fenced") {
         send("```json\n" + JSON.stringify(FIXTURE) + "\n```");
+        return;
+      }
+      // Proveedores que devuelven el texto en partes.
+      if (mode === "parts") {
+        sendMessage({ content: [{ type: "text", text: JSON.stringify(FIXTURE) }] });
+        return;
+      }
+      // Modelos que dejan el texto en reasoning_content y content vacío.
+      if (mode === "reasoning") {
+        sendMessage({ content: "", reasoning_content: JSON.stringify(FIXTURE) });
+        return;
+      }
+      if (mode === "empty") {
+        sendMessage({ content: "" });
         return;
       }
       send(JSON.stringify(FIXTURE));
@@ -120,6 +139,23 @@ describe("adaptador compatible con OpenAI", () => {
     mode = "fenced";
     const result = await provider().analyze(input);
     expect(result.verdict).toBe("señales_sospechosas");
+  });
+
+  it("acepta el texto cuando llega en partes", async () => {
+    mode = "parts";
+    const result = await provider().analyze(input);
+    expect(result.verdict).toBe("señales_sospechosas");
+  });
+
+  it("usa reasoning_content si content viene vacío", async () => {
+    mode = "reasoning";
+    const result = await provider().analyze(input);
+    expect(result.verdict).toBe("señales_sospechosas");
+  });
+
+  it("falla con invalid_response si no hay ningún texto", async () => {
+    mode = "empty";
+    await expect(provider().analyze(input)).rejects.toMatchObject({ code: "invalid_response" });
   });
 
   it("no propaga el cuerpo del error del proveedor", async () => {

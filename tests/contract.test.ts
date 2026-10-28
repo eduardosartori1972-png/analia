@@ -49,6 +49,22 @@ describe("analysisSchema", () => {
     const parsed = analysisSchema.parse({ ...validAnalysis, confianza: 0.97 });
     expect(parsed).not.toHaveProperty("confianza");
   });
+
+  it("completa hardData y escalation si el modelo los omite", () => {
+    const copy: Record<string, unknown> = { ...validAnalysis };
+    delete copy["hardData"];
+    delete copy["escalation"];
+
+    const parsed = analysisSchema.parse(copy);
+
+    expect(parsed.hardData).toEqual({ urls: [], phones: [], senders: [] });
+    expect(parsed.escalation).toBe("none");
+  });
+
+  it("no rechaza un texto apenas más largo que la guía del prompt", () => {
+    const parsed = analysisSchema.safeParse({ ...validAnalysis, summary: "x".repeat(500) });
+    expect(parsed.success).toBe(true);
+  });
 });
 
 describe("analysisResponseSchema", () => {
