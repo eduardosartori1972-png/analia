@@ -4,18 +4,20 @@ Registro de las decisiones cerradas del MVP de AnalIA. Una decisión cerrada no 
 reabre por conveniencia: se reemplaza con un ADR nuevo que la supersede y explica
 por qué.
 
-| #       | Decisión                                                          | Estado   | Fecha      |
-| ------- | ----------------------------------------------------------------- | -------- | ---------- |
-| ADR-001 | Las capturas no se persisten en el servidor                       | Aceptada | 2026-10-23 |
-| ADR-002 | Mobile-first (Android) como plataforma base del MVP               | Aceptada | 2026-10-23 |
-| ADR-003 | Datos duros en texto; sin anotaciones gráficas                    | Aceptada | 2026-10-23 |
-| ADR-004 | Proveedor de visión abstracto; Fake Provider en Etapas 0–2        | Aceptada | 2026-10-23 |
-| ADR-005 | Extracción por transcripción + regex; OCR on-device como fallback | Aceptada | 2026-10-23 |
-| ADR-006 | Piloto sin cuentas, acceso por cohorte                            | Aceptada | 2026-10-23 |
-| ADR-007 | Vercel como hosting y presupuesto de imagen                       | Aceptada | 2026-10-23 |
-| ADR-008 | `node_modules` hoisted en Windows                                 | Aceptada | 2026-10-23 |
-| ADR-009 | Botón primario: verde profundo y una sola ancla por pantalla      | Aceptada | 2026-10-25 |
-| ADR-010 | DeepSeek como proveedor primario, con cadena de respaldo          | Aceptada | 2026-10-25 |
+| #       | Decisión                                                          | Estado                  | Fecha      |
+| ------- | ----------------------------------------------------------------- | ----------------------- | ---------- |
+| ADR-001 | Las capturas no se persisten en el servidor                       | Aceptada                | 2026-10-23 |
+| ADR-002 | Mobile-first (Android) como plataforma base del MVP               | Aceptada                | 2026-10-23 |
+| ADR-003 | Datos duros en texto; sin anotaciones gráficas                    | Aceptada                | 2026-10-23 |
+| ADR-004 | Proveedor de visión abstracto; Fake Provider en Etapas 0–2        | Aceptada                | 2026-10-23 |
+| ADR-005 | Extracción por transcripción + regex; OCR on-device como fallback | Aceptada                | 2026-10-23 |
+| ADR-006 | Piloto sin cuentas, acceso por cohorte                            | Aceptada                | 2026-10-23 |
+| ADR-007 | Vercel como hosting y presupuesto de imagen                       | Aceptada                | 2026-10-23 |
+| ADR-008 | `node_modules` hoisted en Windows                                 | Aceptada                | 2026-10-23 |
+| ADR-009 | Botón primario: verde profundo y una sola ancla por pantalla      | Aceptada                | 2026-10-25 |
+| ADR-010 | DeepSeek como proveedor primario, con cadena de respaldo          | Reemplazada por ADR-012 | 2026-10-25 |
+| ADR-011 | CSP con nonce por request y páginas dinámicas                     | Aceptada                | 2026-10-30 |
+| ADR-012 | OpenAI como proveedor de producción; DeepSeek queda en desarrollo | Aceptada                | 2026-10-30 |
 
 ---
 
@@ -422,3 +424,89 @@ error genérico es peor que una respuesta de un segundo proveedor.
   que ya está tomada por disponibilidad de cuenta.
 - **Reintentar solo el mismo proveedor:** no cubre una caída del proveedor.
 - **Cadena de tres proveedores:** más costo y más latencia; dos alcanza para el piloto.
+
+---
+
+## ADR-011 — CSP con nonce por request y páginas dinámicas
+
+**Estado:** aceptada · 2026-10-30
+
+### Contexto
+
+T-07 del modelo de amenazas quedaba abierto: el sitio no tenía Content-Security-Policy
+porque Next inyecta scripts inline y una política estricta necesita un nonce por
+respuesta. Un nonce, a su vez, solo se puede inyectar en HTML generado en cada request:
+las páginas estáticas se generan en el build, sin nonce.
+
+### Decisión
+
+1. `middleware.ts` genera un nonce por request y arma la CSP con
+   `script-src 'self' 'nonce-…' 'strict-dynamic'`.
+2. `style-src` queda con `'unsafe-inline'` **sin nonce**: si se agrega un nonce al
+   `style-src`, el navegador ignora `'unsafe-inline'` y Next no puede inyectar estilos.
+3. En desarrollo se agregan `'unsafe-eval'` y `ws:` para Turbopack y HMR. En producción
+   no aparecen.
+4. `/` y `/privacidad` pasan a `force-dynamic` para poder llevar el nonce.
+5. El matcher excluye `_next/static`, `_next/image` y el icono: los assets no necesitan
+   nonce y sí caché.
+
+### Consecuencias
+
+- Las dos páginas pierden la generación estática y la caché de CDN. A la escala del
+  piloto (decenas de usuarios) el costo es despreciable; si crece, se puede volver a
+  estático con una CSP por hash.
+- Un script de terceros que se agregue en el futuro tiene que ir con nonce o quedar
+  explícitamente permitido, o la página deja de hidratar.
+- La política se verifica sobre el HTML servido: todos los `<script>` deben llevar el
+  mismo nonce del header (11 de 11 al momento de la verificación).
+
+### Alternativas descartadas
+
+- **`script-src 'unsafe-inline'`:** deja la CSP sin valor real.
+- **CSP con hashes:** Next no expone los hashes de sus scripts inline de forma estable.
+- **Report-only sin endpoint de reportes:** genera ruido sin proteger nada.
+
+---
+
+## ADR-012 — OpenAI como proveedor de producción; DeepSeek queda en desarrollo
+
+**Estado:** aceptada · 2026-10-30 · reemplaza ADR-010
+
+### Contexto
+
+La verificación de términos de DeepSeek (ver `docs/PROVIDERS.md`) encontró tres
+problemas: entrena con los datos por defecto, no publica plazo de retención para la API y
+procesa en China. Con eso no se puede sostener la promesa del producto ni responder a una
+supresión, y la transferencia internacional queda sin base defendible.
+
+El producto trata datos de terceros que aparecen en la captura (número del estafador,
+alias, nombre). Esos terceros no consintieron nada: cuanto menos se retenga y menos se
+use, mejor.
+
+### Decisión
+
+1. **Producción y piloto usan OpenAI** (API paga), con el adaptador compatible ya
+   existente.
+2. **DeepSeek queda para desarrollo**, con capturas sintéticas. No se configura como
+   primario ni como respaldo de producción.
+3. El proveedor de producción debe cumplir, por escrito: no entrenamiento con datos de
+   API y retención con un número. Sin esas dos cláusulas no se publica `/privacidad`.
+4. La configuración es solo por entorno (`ANALYZE_PROVIDER`, `ANALYZE_API_KEY`,
+   `ANALYZE_MODEL`); no hay cambios de código.
+
+### Consecuencias
+
+- El costo por consulta sube respecto de DeepSeek. A 100 consultas por mes es
+  irrelevante frente al riesgo de privacidad; hay que recalcular
+  `ANALYZE_COST_PER_CALL_USD` con el precio del modelo elegido.
+- El modelo debe validarse con el mismo corpus de `evals/` antes del piloto: la calidad
+  de lectura de capturas no es transferible entre proveedores.
+- La transferencia a EE. UU. sigue existiendo y requiere base legal y DPA; deja de ser
+  indefendible, no desaparece.
+
+### Alternativas descartadas
+
+- **Seguir con DeepSeek y debilitar la promesa:** el consentimiento de la persona no
+  cubre los datos de terceros que aparecen en la captura.
+- **Modelo local:** la mejor privacidad, pero el costo de infraestructura y la calidad
+  de OCR no están validados para el piloto.

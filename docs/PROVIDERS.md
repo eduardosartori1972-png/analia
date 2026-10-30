@@ -47,11 +47,11 @@ segundos por imagen y la inyección tratada como dato.
 **Verificación de términos (2026-10-30):** la documentación pública no permite sostener la
 promesa de privacidad del producto.
 
-| Punto | Hallazgo | Consecuencia |
-| --- | --- | --- |
-| Entrenamiento | Entrena con los datos por defecto; no hay opt-out publicado para la API | No se puede afirmar "no la usa para entrenar" |
-| Retención | Sin plazo fijo publicado para la API | No se puede publicar `[X]` ni responder a una supresión |
-| Ubicación | Servidores en China | Transferencia internacional sin adecuación |
+| Punto         | Hallazgo                                                                | Consecuencia                                            |
+| ------------- | ----------------------------------------------------------------------- | ------------------------------------------------------- |
+| Entrenamiento | Entrena con los datos por defecto; no hay opt-out publicado para la API | No se puede afirmar "no la usa para entrenar"           |
+| Retención     | Sin plazo fijo publicado para la API                                    | No se puede publicar `[X]` ni responder a una supresión |
+| Ubicación     | Servidores en China                                                     | Transferencia internacional sin adecuación              |
 
 **Conclusión:** no es apto para el piloto con personas reales ni con capturas que
 contengan datos de terceros. Queda como proveedor de desarrollo, con capturas sintéticas.

@@ -6,6 +6,10 @@ export const metadata: Metadata = {
   description: "Qué hace AnalIA con tus capturas y qué no hace.",
 };
 
+// La CSP usa un nonce por request (ADR-011): la página tiene que renderizarse en
+// cada request para que sus scripts lleven el nonce de esta respuesta.
+export const dynamic = "force-dynamic";
+
 export default function PrivacidadPage() {
   return (
     <>

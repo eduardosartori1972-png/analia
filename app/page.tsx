@@ -2,6 +2,10 @@ import Link from "next/link";
 
 import { CaptureUploader } from "@/components/capture-uploader";
 
+// La CSP usa un nonce por request (ADR-011): la página tiene que renderizarse en
+// cada request para que sus scripts lleven el nonce de esta respuesta.
+export const dynamic = "force-dynamic";
+
 export default function HomePage() {
   return (
     <>
