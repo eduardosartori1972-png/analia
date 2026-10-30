@@ -38,25 +38,34 @@
 No hay un ganador obvio sin medir. La decisión se toma con el corpus de `evals/` y una
 planilla de tres columnas: aciertos, latencia y costo por caso.
 
-### Decisión para el MVP: DeepSeek primario
+### DeepSeek en desarrollo, no en producción
 
-Se usa **DeepSeek (modelo Flash con visión)** como proveedor primario porque la cuenta y
-el saldo ya existen y la API es compatible con el formato de OpenAI, así que el adaptador
-es el mismo que usaría cualquier otro proveedor de esa familia.
+Se usó **DeepSeek (modelo Flash con visión)** para construir el flujo porque la cuenta y el
+saldo ya existían. Técnicamente funcionó: 4/4 casos con los veredictos esperados, 3–4
+segundos por imagen y la inyección tratada como dato.
 
-**Resultado de la primera corrida (2026-10-25):** 4/4 casos con los veredictos
-esperados, **3–4 segundos por imagen** y la inyección escondida en la captura tratada
-como dato. La suite completa quedó en 60/60. El nombre exacto del modelo va en
-`ANALYZE_MODEL`.
+**Verificación de términos (2026-10-30):** la documentación pública no permite sostener la
+promesa de privacidad del producto.
 
-Lo que queda por confirmar con el proveedor antes de publicar la política de privacidad:
-no entrenamiento con los datos, plazo de retención y región de procesamiento. Mientras
-eso no esté, la página `/privacidad` sigue marcada como borrador.
+| Punto | Hallazgo | Consecuencia |
+| --- | --- | --- |
+| Entrenamiento | Entrena con los datos por defecto; no hay opt-out publicado para la API | No se puede afirmar "no la usa para entrenar" |
+| Retención | Sin plazo fijo publicado para la API | No se puede publicar `[X]` ni responder a una supresión |
+| Ubicación | Servidores en China | Transferencia internacional sin adecuación |
 
-**Respaldo:** la arquitectura admite un segundo proveedor (`ANALYZE_FALLBACK_PROVIDER`).
-Si el primario falla o da timeout, la cadena pasa al respaldo antes de mostrar el error.
-Para el piloto se puede usar OpenAI o Gemini con una clave aparte; el adaptador de
-OpenAI-compatible ya está implementado y el de Gemini queda como placeholder documentado.
+**Conclusión:** no es apto para el piloto con personas reales ni con capturas que
+contengan datos de terceros. Queda como proveedor de desarrollo, con capturas sintéticas.
+La elección de proveedor para producción se retoma entre los candidatos de la tabla, con
+un requisito nuevo y no negociable: **no entrenamiento y retención con número, por
+escrito**.
+
+### Respaldo
+
+La arquitectura admite un segundo proveedor (`ANALYZE_FALLBACK_PROVIDER`). Si el primario
+falla o da timeout, la cadena pasa al respaldo antes de mostrar el error. Para el piloto
+hay que usar un proveedor con las mismas garantías que el primario: **no se configura
+DeepSeek como respaldo de producción**, porque volvería a exponer las capturas a los
+términos que estamos evitando.
 
 ## Cómo lo probaría (y qué miraría)
 
