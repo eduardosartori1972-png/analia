@@ -85,8 +85,9 @@ export default function PrivacidadPage() {
 
           <h2>Contacto</h2>
           <p>
-            Escribinos a <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>. Contestamos las
-            consultas sobre datos personales y las dudas sobre el piloto.
+            El responsable del tratamiento es Eduardo Sartori. Escribinos a{" "}
+            <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>. Contestamos las consultas sobre
+            datos personales y las dudas sobre el piloto.
           </p>
 
           <h2>Cambios en esta política</h2>

@@ -49,7 +49,7 @@ dudar, no hagas la operación y consultá.
 
 ## Contacto
 
-Responsable del piloto: `[nombre y apellido]`
+Responsable del piloto: Eduardo Sartori
 Teléfono: `[teléfono]`
 Correo: analia.soporte@gmail.com
 

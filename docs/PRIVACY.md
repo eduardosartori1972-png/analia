@@ -7,7 +7,9 @@
 Este documento es la fuente de verdad interna. La página `/privacidad` del sitio toma de
 acá su contenido y debe versionarse junto con este archivo.
 
+**Responsable del tratamiento:** Eduardo Sartori (Founder).
 **Contacto para derechos:** `analia.soporte@gmail.com`.
+**DPA de OpenAI:** firmado el 31/10/2026, archivado en la carpeta segura del responsable.
 
 ## 1. La promesa, en una frase
 
@@ -90,8 +92,7 @@ Plazo de respuesta comprometido: 5 días hábiles para consultas de derechos.
 
 - [x] Proveedor elegido y plazo de retención confirmado en su documentación (sección 2).
 - [x] Correo de contacto publicado y en el consentimiento.
-- [ ] DPA de OpenAI: formulario enviado el 2026-10-31. Falta archivar el PDF y la fecha de
-      aceptación cuando llegue.
+- [x] DPA de OpenAI firmado el 2026-10-31 y archivado en la carpeta segura del responsable.
 - [ ] Revisión legal de la Ley 25.326: base legal, registro de base de datos,
       transferencia internacional, datos de terceros. Ver `DATA-INVENTORY.md`.
 - [ ] Definir si el aviso de la Etapa 1 se acepta por sesión o por dispositivo.
