@@ -51,9 +51,9 @@ dudar, no hagas la operación y consultá.
 
 Responsable del piloto: `[nombre y apellido]`
 Teléfono: `[teléfono]`
-Correo: `[correo]`
+Correo: analia.soporte@gmail.com
 
-Para pedir información, corregir o borrar tus datos, escribí a ese contacto.
+Para pedir información, corregir o borrar tus datos, escribí a ese correo.
 
 ## Firma
 

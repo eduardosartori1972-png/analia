@@ -1,11 +1,13 @@
 # Privacidad — documento de trabajo
 
-> **Estado: contenido verificado, pendiente la revisión legal.** El plazo de retención ya
-> está confirmado en la documentación del proveedor. Falta la revisión de la Ley 25.326 y
-> un correo de contacto para ejercer derechos.
+> **Estado: publicada (31/10/2026).** El plazo de retención está confirmado en la
+> documentación de OpenAI y hay correo de contacto. La revisión legal de la Ley 25.326
+> sigue pendiente y debe completarse antes de ampliar el piloto.
 
 Este documento es la fuente de verdad interna. La página `/privacidad` del sitio toma de
 acá su contenido y debe versionarse junto con este archivo.
+
+**Contacto para derechos:** `analia.soporte@gmail.com`.
 
 ## 1. La promesa, en una frase
 
@@ -77,17 +79,20 @@ hacer:
 
 - no subir la captura;
 - borrar la captura de su teléfono;
-- pedir información sobre el piloto al responsable;
+- escribir a `analia.soporte@gmail.com` para preguntar, rectificar o pedir la supresión;
 - pedir la supresión de la imagen frente al proveedor, a través nuestro, mientras esté
-  dentro del plazo de 30 días.
+  dentro del plazo de 30 días;
+- reclamar ante la AAIP si no queda conforme con la respuesta.
 
-## 7. Pendientes antes de publicar
+Plazo de respuesta comprometido: 5 días hábiles para consultas de derechos.
+
+## 7. Pendientes (no bloquean la publicación)
 
 - [x] Proveedor elegido y plazo de retención confirmado en su documentación (sección 2).
+- [x] Correo de contacto publicado y en el consentimiento.
 - [ ] Descargar y archivar el DPA de OpenAI, con fecha de aceptación.
 - [ ] Revisión legal de la Ley 25.326: base legal, registro de base de datos,
       transferencia internacional, datos de terceros. Ver `DATA-INVENTORY.md`.
-- [ ] Correo de contacto para derechos (hoy no existe).
 - [ ] Definir si el aviso de la Etapa 1 se acepta por sesión o por dispositivo.
 - [ ] Revisar el texto con una persona del público objetivo (lectura fácil).
 - [ ] Confirmar el plazo de retención de logs de Vercel.

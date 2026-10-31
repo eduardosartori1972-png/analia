@@ -10,6 +10,8 @@ export const metadata: Metadata = {
 // cada request para que sus scripts lleven el nonce de esta respuesta.
 export const dynamic = "force-dynamic";
 
+const CONTACT_EMAIL = "analia.soporte@gmail.com";
+
 export default function PrivacidadPage() {
   return (
     <>
@@ -17,17 +19,11 @@ export default function PrivacidadPage() {
         <Link className="wordmark" href="/">
           AnalIA
         </Link>
-        <span className="tag">Borrador</span>
+        <span className="tag">Piloto</span>
       </header>
 
       <main id="contenido" className="shell">
         <h1>Privacidad</h1>
-
-        <div className="notice" role="status">
-          <strong>Este texto está en revisión legal.</strong>
-          El plazo de retención ya está confirmado. Falta la revisión de la Ley 25.326 y un correo
-          de contacto para ejercer tus derechos. Antes del piloto se publica la versión definitiva.
-        </div>
 
         <div className="prose">
           <p>
@@ -77,18 +73,28 @@ export default function PrivacidadPage() {
 
           <h2>Tus derechos</h2>
           <p>
-            Como AnalIA no tiene cuentas, no hay historial que borrar. Podés pedir información sobre
-            el piloto y sobre lo que se guarda a la persona que te invitó a participar. Mientras la
-            imagen esté dentro del plazo de 30 días en el proveedor, también podés pedir que se
-            elimine.
+            Como AnalIA no tiene cuentas, no hay historial que borrar. Podés escribirnos para
+            preguntar qué datos hay sobre vos, pedir que se corrijan o pedir que se eliminen.
+            Mientras la imagen esté dentro del plazo de 30 días en el proveedor, también podemos
+            pedir que se borre.
+          </p>
+          <p>
+            Si no quedás conforme con la respuesta, podés presentar un reclamo ante la Agencia de
+            Acceso a la Información Pública (AAIP).
           </p>
 
-          <h2>Qué estamos terminando</h2>
-          <ul>
-            <li>La revisión legal de la Ley 25.326, con asesoría.</li>
-            <li>Un correo de contacto para pedidos sobre tus datos.</li>
-            <li>El plazo de conservación de los registros técnicos de Vercel.</li>
-          </ul>
+          <h2>Contacto</h2>
+          <p>
+            Escribinos a <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>. Contestamos las
+            consultas sobre datos personales y las dudas sobre el piloto.
+          </p>
+
+          <h2>Cambios en esta política</h2>
+          <p>
+            Si cambia algo —por ejemplo, el proveedor de visión o el plazo de conservación— se
+            actualiza esta página con la fecha nueva. La versión vigente es siempre la que está
+            publicada acá.
+          </p>
 
           <p>
             <Link href="/">Volver al inicio</Link>
