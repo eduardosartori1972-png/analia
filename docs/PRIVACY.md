@@ -90,7 +90,8 @@ Plazo de respuesta comprometido: 5 días hábiles para consultas de derechos.
 
 - [x] Proveedor elegido y plazo de retención confirmado en su documentación (sección 2).
 - [x] Correo de contacto publicado y en el consentimiento.
-- [ ] Descargar y archivar el DPA de OpenAI, con fecha de aceptación.
+- [ ] DPA de OpenAI: formulario enviado el 2026-10-31. Falta archivar el PDF y la fecha de
+      aceptación cuando llegue.
 - [ ] Revisión legal de la Ley 25.326: base legal, registro de base de datos,
       transferencia internacional, datos de terceros. Ver `DATA-INVENTORY.md`.
 - [ ] Definir si el aviso de la Etapa 1 se acepta por sesión o por dispositivo.
