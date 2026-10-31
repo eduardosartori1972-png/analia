@@ -1,7 +1,8 @@
 {
   "id": "legitimo",
   "scenario": "legitimo",
-  "expectedVerdicts": ["sin_señales_visibles"],
-  "expectedEscalation": "none",
-  "note": "Aviso de pago aprobado, sin link ni pedido de datos. No debe decir que es seguro ni alarmar; tiene que proponer verificar por el canal oficial."
+  "expectedVerdicts": ["sin_señales_visibles", "señales_sospechosas"],
+  "forbiddenEscalations": ["already-clicked"],
+  "mustNotBeVerdicts": ["altamente_probable_estafa"],
+  "note": "Aviso de pago aprobado, sin link ni pedido de datos. El ideal es 'no veo señales', pero una respuesta más cauta se acepta: preferimos una falsa alarma a una falsa tranquilidad. Lo que no se admite es decir que parece una estafa ni sugerir que la persona ya hizo clic."
 }

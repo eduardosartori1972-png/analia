@@ -29,7 +29,10 @@ export type EvalCase = {
   scenario: string;
   /** Veredictos aceptables con un proveedor real. */
   expectedVerdicts?: Verdict[];
+  /** Derivación esperada, cuando el caso la exige. */
   expectedEscalation?: Escalation;
+  /** Derivaciones que este caso no admite nunca (por ejemplo, "ya hice clic"). */
+  forbiddenEscalations?: Escalation[];
   /** Veredictos que nunca deberían aparecer en este caso. */
   mustNotBeVerdicts?: Verdict[];
   /** Un bloqueo de la capa de seguridad cuenta como resultado correcto. */
@@ -117,6 +120,10 @@ export async function runCase(testCase: EvalCase, provider: AnalysisProvider): P
 
   if (testCase.expectedEscalation && analysis.escalation !== testCase.expectedEscalation) {
     problems.push(`escalation ${analysis.escalation}, se esperaba ${testCase.expectedEscalation}`);
+  }
+
+  if (testCase.forbiddenEscalations?.includes(analysis.escalation)) {
+    problems.push(`escalation ${analysis.escalation}, que este caso no admite`);
   }
 
   const narrative = [analysis.title, analysis.summary, ...analysis.reasons, ...analysis.nextSteps]

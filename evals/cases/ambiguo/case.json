@@ -2,6 +2,7 @@
   "id": "ambiguo",
   "scenario": "ambiguo",
   "expectedVerdicts": ["no_pude_analizar", "señales_sospechosas"],
-  "expectedEscalation": "none",
-  "note": "Mensaje cortado, sin remitente visible. Debe declarar la incertidumbre y pedir una captura mejor, sin arriesgar un veredicto tranquilizador."
+  "forbiddenEscalations": ["already-clicked"],
+  "mustNotBeVerdicts": ["sin_señales_visibles", "altamente_probable_estafa"],
+  "note": "Mensaje cortado, sin remitente visible. Lo correcto es declarar que no alcanza la información; una lectura cauta como sospechosa también se acepta. Lo que no se admite es tranquilizar sin evidencia ni sugerir que la persona ya hizo clic."
 }
