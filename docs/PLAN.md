@@ -202,11 +202,15 @@ MVP y dejar listo el protocolo para las 10 personas.
 
 ## Etapa 6 — Hardening pre-piloto
 
-- CSP con nonces.
-- Revisión legal (Ley 25.326): consentimiento, registro de base, transferencia
-  internacional, datos de terceros.
-- Publicación de `/privacidad` con el plazo `[X]` confirmado.
-- Monitoreo de abuso y límites del enlace de cohorte.
+- [x] CSP con nonces (ADR-011), verificada sobre el HTML servido.
+- [x] Plazo de retención confirmado en la documentación de OpenAI: hasta 30 días por
+      monitoreo de abuso, sin entrenamiento (`PRIVACY.md`, sección 2).
+- [ ] Descargar y archivar el DPA de OpenAI con fecha de aceptación.
+- [ ] Revisión legal (Ley 25.326): consentimiento, registro de base, transferencia
+      internacional, datos de terceros. Insumo listo en `DATA-INVENTORY.md`.
+- [ ] Publicar `/privacidad` sin el aviso de borrador. Falta el correo de contacto.
+- [ ] Consentimiento del piloto revisado (`CONSENT.md` es el borrador).
+- [ ] Monitoreo de abuso, alertas de costo y límites del enlace de cohorte.
 
 ---
 

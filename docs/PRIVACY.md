@@ -1,50 +1,58 @@
 # Privacidad — documento de trabajo
 
-> **Estado: BORRADOR.** No publicar hasta cerrar el plazo de retención del proveedor
-> de visión (`[X]`) y la revisión legal de la Etapa 6.
+> **Estado: contenido verificado, pendiente la revisión legal.** El plazo de retención ya
+> está confirmado en la documentación del proveedor. Falta la revisión de la Ley 25.326 y
+> un correo de contacto para ejercer derechos.
 
-Este documento es la fuente de verdad interna. La página `/privacidad` del sitio toma
-de acá su contenido y debe versionarse junto con este archivo.
+Este documento es la fuente de verdad interna. La página `/privacidad` del sitio toma de
+acá su contenido y debe versionarse junto con este archivo.
 
 ## 1. La promesa, en una frase
 
-AnalIA no guarda tus capturas. Para analizarlas, se envían de forma cifrada a un
-proveedor de visión que no las usa para entrenar modelos y las elimina en `[X]`. La
-copia original queda en tu dispositivo.
+> AnalIA no guarda tus capturas. Para analizarla, tu imagen se envía cifrada a OpenAI
+> (Estados Unidos), que **no la usa para entrenar modelos** y la conserva **hasta 30 días**
+> en registros de prevención de abuso. La copia original queda en tu teléfono.
 
-## 2. Versiones de la copy
+## 2. Fuente de los datos del proveedor
 
-### Versión A — la que está hoy en la app (Etapa 0)
+| Dato                             | Valor                                                                                                                                | Fuente                                                                                          |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------- |
+| Uso para entrenamiento           | **No** (desde el 1 de marzo de 2023, salvo opt-in explícito)                                                                         | [Data controls in the OpenAI platform](https://developers.openai.com/api/docs/guides/your-data) |
+| Retención por monitoreo de abuso | **Hasta 30 días**                                                                                                                    | misma página, sección _Data retention controls for abuse monitoring_                            |
+| Endpoint usado                   | `/v1/chat/completions`: entrenamiento **No**, retención **30 días**, estado de aplicación **None**                                   | misma página, tabla por endpoint                                                                |
+| Procesamiento                    | Estados Unidos (sin _data residency_ configurado)                                                                                    | misma página, sección _Data residency controls_                                                 |
+| Excepción de imágenes            | Las imágenes se escanean por CSAM; si el clasificador detecta contenido, se retienen para revisión manual **aun con retención cero** | misma página, _Image and file inputs_                                                           |
 
-Se usa mientras `[X]` no esté confirmado. No afirma nada que no podamos sostener:
+Consulta: 2026-10-31. Guardar también el PDF de la página y el DPA aceptado en la cuenta,
+con fecha, como respaldo de esta cita.
 
-> AnalIA no guarda tus capturas en ningún servidor. Cuando el análisis esté activo, tu
-> imagen se enviará cifrada al proveedor de visión y se descartará al terminar. La copia
-> original queda en tu dispositivo.
+**Matiz de redacción:** la política dice "hasta 30 días" y admite retención mayor si la ley
+lo exige o si es necesario para proteger a un tercero. La copy dice "hasta 30 días" y no
+"se borra a los 30 días".
 
-Además, `/privacidad` muestra un aviso de borrador con lo que falta definir.
+## 3. Versión vigente de la copy
 
-### Versión B — definitiva, requiere `[X]` y contrato firmado
-
-> AnalIA no guarda tus capturas. Para analizarla, tu imagen se envía cifrada a
-> `[Proveedor]`, que no la usa para entrenar modelos y la elimina en `[X]` según su
-> política. La copia original queda en tu teléfono. Tampoco guardamos el texto que
-> aparece en la imagen.
+> AnalIA no guarda tus capturas. Para analizarla, tu imagen se envía cifrada a OpenAI
+> (Estados Unidos), que no la usa para entrenar modelos y la conserva hasta 30 días en
+> registros de prevención de abuso. La copia original queda en tu teléfono. Tampoco
+> guardamos el texto que aparece en la imagen.
 
 Reglas de redacción:
 
 - "cifrada en tránsito" en lugar de "de forma segura": lo segundo no se puede verificar.
-- "no la usa para entrenar" solo se afirma si está en el contrato del tier de API.
-- El número `[X]` sale de la política del proveedor, no de una estimación nuestra.
+- "no la usa para entrenar" se sostiene con la cita de la sección 2. Si OpenAI cambia la
+  política, se revisa antes de publicar de nuevo.
+- El número sale de la política del proveedor, no de una estimación nuestra.
 - Nunca decir "tus datos están seguros" ni "100 % privado".
+- Mencionar la excepción legal: "puede conservarse más tiempo si la ley lo exige".
 
-## 3. Flujo de datos
+## 4. Flujo de datos
 
 | Dato                             | Dónde vive                           | Cuánto tiempo                   | Quién accede           |
 | -------------------------------- | ------------------------------------ | ------------------------------- | ---------------------- |
 | Captura original                 | Dispositivo del usuario              | Hasta que la borre              | El usuario             |
 | Imagen en tránsito               | Memoria del proceso en Vercel        | Duración del request (segundos) | El proceso             |
-| Imagen en el proveedor de visión | Servidores del proveedor             | `[X]` — pendiente               | El proveedor           |
+| Imagen en el proveedor de visión | Servidores de OpenAI (EE. UU.)       | Hasta 30 días (abuso)           | OpenAI                 |
 | Transcripción del texto          | Memoria del proceso                  | Duración del request            | El proceso             |
 | Veredicto y métricas             | Logs de Vercel                       | 90 días (a confirmar)           | Equipo técnico         |
 | Consentimiento del piloto        | Fuera de la app (formulario firmado) | Hasta 1 año después del piloto  | Responsable del piloto |
@@ -52,29 +60,34 @@ Reglas de redacción:
 Lo que **nunca** se registra: imagen, transcripción, datos de contacto que aparezcan en
 la captura, contenido del mensaje.
 
-## 4. Datos de terceros
+## 5. Datos de terceros
 
 Una captura de un mensaje puede contener datos de otra persona (remitente, número,
 alias, CBU). No tenemos consentimiento de esa persona. Por eso:
 
-- la imagen no se persiste (ADR-001);
+- la imagen no se persiste en nuestra infraestructura (ADR-001);
+- el proveedor no la usa para entrenar y la conserva como máximo 30 días;
 - el piloto no publica capturas reales;
 - el corpus de evaluación es sintético o está anonimizado de forma irreversible.
 
-## 5. Derechos y control
+## 6. Derechos y control
 
 El MVP no tiene cuentas, así que no hay historial que borrar. Lo que el usuario puede
 hacer:
 
 - no subir la captura;
 - borrar la captura de su teléfono;
-- pedir información sobre el piloto al responsable.
+- pedir información sobre el piloto al responsable;
+- pedir la supresión de la imagen frente al proveedor, a través nuestro, mientras esté
+  dentro del plazo de 30 días.
 
-## 6. Pendientes antes de publicar
+## 7. Pendientes antes de publicar
 
-- [ ] Proveedor elegido y contrato con cláusula de no entrenamiento y retención `[X]`.
+- [x] Proveedor elegido y plazo de retención confirmado en su documentación (sección 2).
+- [ ] Descargar y archivar el DPA de OpenAI, con fecha de aceptación.
 - [ ] Revisión legal de la Ley 25.326: base legal, registro de base de datos,
-      transferencia internacional, datos de terceros.
+      transferencia internacional, datos de terceros. Ver `DATA-INVENTORY.md`.
+- [ ] Correo de contacto para derechos (hoy no existe).
 - [ ] Definir si el aviso de la Etapa 1 se acepta por sesión o por dispositivo.
 - [ ] Revisar el texto con una persona del público objetivo (lectura fácil).
 - [ ] Confirmar el plazo de retención de logs de Vercel.

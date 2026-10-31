@@ -24,9 +24,9 @@ export default function PrivacidadPage() {
         <h1>Privacidad</h1>
 
         <div className="notice" role="status">
-          <strong>Este texto todavía es un borrador.</strong>
-          Falta confirmar el plazo exacto de retención del proveedor de visión. Hasta tenerlo por
-          escrito, no publicamos un número.
+          <strong>Este texto está en revisión legal.</strong>
+          El plazo de retención ya está confirmado. Falta la revisión de la Ley 25.326 y un correo
+          de contacto para ejercer tus derechos. Antes del piloto se publica la versión definitiva.
         </div>
 
         <div className="prose">
@@ -43,11 +43,29 @@ export default function PrivacidadPage() {
               actividad.
             </li>
             <li>
-              Para analizarla, la imagen se envía cifrada al proveedor de visión y se descarta al
-              terminar la respuesta.
+              Para analizarla, la imagen se envía cifrada a OpenAI, el proveedor de visión que hace
+              el análisis. Ese envío sale de nuestro servidor y va a servidores en Estados Unidos.
+            </li>
+            <li>
+              OpenAI no usa tu imagen para entrenar modelos. La conserva hasta 30 días en registros
+              de prevención de abuso, y puede conservarla más si la ley lo exige.
             </li>
             <li>El texto que aparece en la imagen tampoco se guarda en nuestros registros.</li>
           </ul>
+
+          <h2>Quién procesa la imagen</h2>
+          <p>
+            El análisis lo hace OpenAI a través de su API. No se usa para entrenar modelos y se
+            conserva como máximo 30 días para prevenir abuso. Podés leer su política en{" "}
+            <a
+              href="https://developers.openai.com/api/docs/guides/your-data"
+              rel="noreferrer noopener"
+              target="_blank"
+            >
+              Data controls in the OpenAI platform
+            </a>
+            .
+          </p>
 
           <h2>Qué no hacemos</h2>
           <ul>
@@ -57,13 +75,19 @@ export default function PrivacidadPage() {
             <li>No prometemos que algo sea 100 % seguro: no existe esa garantía.</li>
           </ul>
 
-          <h2>Qué falta definir</h2>
+          <h2>Tus derechos</h2>
+          <p>
+            Como AnalIA no tiene cuentas, no hay historial que borrar. Podés pedir información sobre
+            el piloto y sobre lo que se guarda a la persona que te invitó a participar. Mientras la
+            imagen esté dentro del plazo de 30 días en el proveedor, también podés pedir que se
+            elimine.
+          </p>
+
+          <h2>Qué estamos terminando</h2>
           <ul>
-            <li>
-              El plazo de retención del proveedor de visión (se publica acá cuando esté confirmado).
-            </li>
-            <li>Los requisitos de la Ley 25.326 aplicables al piloto, con asesoría legal.</li>
-            <li>Qué datos de contacto se guardan para el piloto y por cuánto tiempo.</li>
+            <li>La revisión legal de la Ley 25.326, con asesoría.</li>
+            <li>Un correo de contacto para pedidos sobre tus datos.</li>
+            <li>El plazo de conservación de los registros técnicos de Vercel.</li>
           </ul>
 
           <p>
@@ -73,8 +97,8 @@ export default function PrivacidadPage() {
       </main>
 
       <footer className="footer">
-        <p>AnalIA · Etapa 0 de 6</p>
-        <p>Última actualización: 23 de octubre de 2026</p>
+        <p>AnalIA · Piloto</p>
+        <p>Última actualización: 31 de octubre de 2026</p>
       </footer>
     </>
   );
