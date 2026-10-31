@@ -89,8 +89,11 @@ class OpenAiCompatibleProvider implements AnalysisProvider {
     }
 
     if (!response.ok) {
-      // Solo el código HTTP queda en el log, nunca el cuerpo.
-      console.error(`[analysis] ${this.name} respondió ${response.status}`);
+      // Del cuerpo del error solo se registran campos estructurados: tipo, código
+      // y parámetro. Nunca el mensaje ni el eco del request, que pueden contener
+      // datos del usuario.
+      const detail = await describeError(response);
+      console.error(`[analysis] ${this.name} respondió ${response.status}${detail}`);
       throw new AnalysisError("provider_error", "El proveedor de análisis no está disponible.");
     }
 
@@ -123,6 +126,29 @@ class OpenAiCompatibleProvider implements AnalysisProvider {
 
 function toDataUrl(bytes: Uint8Array, mimeType: string): string {
   return `data:${mimeType};base64,${Buffer.from(bytes).toString("base64")}`;
+}
+
+type ApiErrorBody = {
+  error?: { type?: unknown; code?: unknown; param?: unknown };
+};
+
+/**
+ * Resume un error HTTP con los campos que sirven para diagnosticar
+ * (`param=max_tokens`, por ejemplo) sin volcar texto del proveedor ni del request.
+ */
+async function describeError(response: Response): Promise<string> {
+  const body: unknown = await response.json().catch(() => null);
+  const error = (body as ApiErrorBody | null)?.error;
+
+  const fields = [
+    ["type", error?.type],
+    ["code", error?.code],
+    ["param", error?.param],
+  ]
+    .filter(([, value]) => typeof value === "string" && value.length > 0)
+    .map(([key, value]) => `${key}=${String(value).slice(0, 60)}`);
+
+  return fields.length > 0 ? ` (${fields.join(" ")})` : "";
 }
 
 type ChatMessage = {

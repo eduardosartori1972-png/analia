@@ -1,7 +1,7 @@
 import type { AddressInfo } from "node:net";
 import { createServer, type Server } from "node:http";
 
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AnalysisError } from "@/lib/analysis/errors";
 import { createOpenAiCompatibleProvider } from "@/lib/analysis/providers/openai-compatible";
@@ -22,12 +22,14 @@ const FIXTURE = {
   hardData: { urls: [], phones: [], senders: [] },
 };
 
-type Mode = "ok" | "fenced" | "bad-json" | "http-500" | "slow" | "parts" | "reasoning" | "empty";
+type Mode =
+  "ok" | "fenced" | "bad-json" | "http-500" | "http-400" | "slow" | "parts" | "reasoning" | "empty";
 let mode: Mode = "ok";
 let server: Server;
 let baseUrl = "";
 let lastBody: Record<string, unknown> = {};
 let lastAuth = "";
+let lastPath = "";
 
 beforeAll(async () => {
   server = createServer((request, response) => {
@@ -35,6 +37,7 @@ beforeAll(async () => {
     request.on("data", (chunk) => (raw += chunk));
     request.on("end", () => {
       lastAuth = String(request.headers.authorization ?? "");
+      lastPath = request.url ?? "";
       lastBody = JSON.parse(raw) as Record<string, unknown>;
 
       const send = (content: string) => {
@@ -50,6 +53,20 @@ beforeAll(async () => {
       if (mode === "http-500") {
         response.writeHead(500, { "content-type": "application/json" });
         response.end(JSON.stringify({ error: { message: "detalle interno que no debe salir" } }));
+        return;
+      }
+      if (mode === "http-400") {
+        response.writeHead(400, { "content-type": "application/json" });
+        response.end(
+          JSON.stringify({
+            error: {
+              type: "invalid_request_error",
+              code: "unsupported_parameter",
+              param: "max_tokens",
+              message: "mensaje interno que no debe salir",
+            },
+          }),
+        );
         return;
       }
       if (mode === "slow") {
@@ -171,6 +188,40 @@ describe("adaptador compatible con OpenAI", () => {
     } catch (error) {
       expect(String((error as Error).message)).not.toContain("detalle interno");
     }
+  });
+
+  it("diagnostica un 400 con el parámetro, sin volcar el mensaje", async () => {
+    mode = "http-400";
+    const logs: string[] = [];
+    const spy = vi.spyOn(console, "error").mockImplementation((...args: unknown[]) => {
+      logs.push(args.map(String).join(" "));
+    });
+
+    try {
+      await provider().analyze(input);
+    } catch {
+      // Se espera el error.
+    } finally {
+      spy.mockRestore();
+    }
+
+    const output = logs.join("\n");
+    expect(output).toContain("respondió 400");
+    expect(output).toContain("param=max_tokens");
+    expect(output).toContain("code=unsupported_parameter");
+    expect(output).not.toContain("mensaje interno");
+  });
+
+  it("respeta el /v1 de la base de OpenAI", async () => {
+    const openai = createOpenAiCompatibleProvider({
+      name: "openai",
+      baseUrl: `${baseUrl}/v1`,
+      apiKey: "clave-de-prueba",
+      model: "gpt-4o-mini",
+    });
+
+    await openai.analyze(input);
+    expect(lastPath).toBe("/v1/chat/completions");
   });
 
   it("falla con invalid_response si el contenido no es JSON", async () => {
