@@ -4,23 +4,27 @@ Asistente digital para adultos mayores. El usuario sube una captura de un mensaj
 correo o ventana que le genera duda y AnalIA le responde, en palabras simples, si ve
 señales de estafa y qué conviene hacer.
 
-> **Estado: Etapa 3 cerrada y validada con DeepSeek Flash.** Los cuatro casos del corpus
-> pasaron contra el modelo real (3–4 s por imagen) y la suite completa está en verde:
-> 60/60 tests. Siguen el prompt v1, la capa de seguridad, la derivación bancaria, la
-> cadena de respaldo y el corpus con capturas sintéticas. Ver
+> **Estado: listo para el piloto cerrado.** Producción en Vercel con OpenAI
+> (`gpt-4o-mini`), acceso por código (ADR-013), CSP con nonce (ADR-011) y privacidad con
+> plazo de retención verificado (`/privacidad` sigue en revisión legal). Ver
 > [`docs/PLAN.md`](docs/PLAN.md), [`docs/PROVIDERS.md`](docs/PROVIDERS.md) y
 > [`docs/KEY-ROTATION.md`](docs/KEY-ROTATION.md).
 
 ## Activación del proveedor real
 
 1. Crear `analia/.env.local` (está en `.gitignore`).
-2. Pegar la clave y el modelo:
+2. Pegar la clave, el modelo y el código de acceso:
 
    ```bash
-   ANALYZE_PROVIDER=deepseek
+   ANALYZE_PROVIDER=openai
    ANALYZE_API_KEY=sk-...
-   ANALYZE_MODEL=deepseek-flash
+   ANALYZE_MODEL=gpt-4o-mini
+   ANALYZE_ACCESS_CODE=ANALIA-TEST
+   ANALYZE_ACCESS_SECRET=una-cadena-larga-y-aleatoria
    ```
+
+   Sin `ANALYZE_ACCESS_CODE` el acceso queda abierto: solo para desarrollo. En producción
+   es obligatorio.
 
 3. Reiniciar `pnpm dev`.
 4. Correr el corpus contra el proveedor real (PowerShell):

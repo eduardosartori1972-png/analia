@@ -75,3 +75,19 @@ El orden importa: revocar primero deja la app caída hasta el redeploy.
 2. No se usa la clave del proveedor desde el cliente: el bundle no la ve nunca.
 3. `pnpm check:client-bundle` corre en CI y falla si aparece.
 4. Si una clave se filtró, se revoca; no se "rota por las dudas" dejándola viva.
+
+## Rotar el código de acceso del piloto
+
+Es el otro secreto del sistema (ADR-013). Se rota igual que una clave, pero el efecto es
+distinto: **invalida todas las sesiones abiertas**, porque la cookie se firma con el
+código o con `ANALYZE_ACCESS_SECRET`.
+
+1. Elegir un código nuevo, sin relación con el anterior (nada de `ANALIA-2`).
+2. Actualizar `ANALYZE_ACCESS_CODE` (y `ANALYZE_ACCESS_SECRET` si se usa) en Vercel.
+3. Redeployar.
+4. Verificar que el código viejo ya no entra: en la app, con una ventana nueva, debe
+   devolver "Ese código no es válido".
+5. Avisar el código nuevo a los participantes por el canal que ya usan.
+
+Si el código se filtró, no alcanza con cambiarlo: revisar el consumo del proveedor por si
+hubo uso fuera del piloto.

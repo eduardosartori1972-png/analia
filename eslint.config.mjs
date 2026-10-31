@@ -7,8 +7,8 @@ export default defineConfig([
   ...nextTypescript,
   {
     rules: {
-      // En el servidor permitimos console.error/warn; el resto, a revisar.
-      "no-console": ["warn", { allow: ["error", "warn"] }],
+      // En el servidor permitimos error, warn e info (operación); el resto, a revisar.
+      "no-console": ["warn", { allow: ["error", "warn", "info"] }],
       eqeqeq: ["error", "smart"],
       "prefer-const": "error",
     },

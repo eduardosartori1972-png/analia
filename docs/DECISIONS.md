@@ -18,6 +18,7 @@ por qué.
 | ADR-010 | DeepSeek como proveedor primario, con cadena de respaldo          | Reemplazada por ADR-012 | 2026-10-25 |
 | ADR-011 | CSP con nonce por request y páginas dinámicas                     | Aceptada                | 2026-10-30 |
 | ADR-012 | OpenAI como proveedor de producción; DeepSeek queda en desarrollo | Aceptada                | 2026-10-30 |
+| ADR-013 | Código de acceso con cookie firmada; testers sin límite de uso    | Aceptada                | 2026-10-31 |
 
 ---
 
@@ -510,3 +511,51 @@ use, mejor.
   cubre los datos de terceros que aparecen en la captura.
 - **Modelo local:** la mejor privacidad, pero el costo de infraestructura y la calidad
   de OCR no están validados para el piloto.
+
+---
+
+## ADR-013 — Código de acceso con cookie firmada; testers sin límite de uso
+
+**Estado:** aceptada · 2026-10-31
+
+### Contexto
+
+El piloto es cerrado, pero la URL de producción es pública. Sin cuentas (ADR-006),
+cualquiera que la encuentre puede gastar la cuota del proveedor. A la vez, los límites
+pensados para el público general (30 consultas cada 10 minutos, 100 por mes) molestan a
+un tester que repite pruebas seguidas.
+
+Validar el código en el navegador no sirve: quedaría dentro del bundle y sería público.
+
+### Decisión
+
+1. El código se define en `ANALYZE_ACCESS_CODE` y se valida **en el servidor**, con
+   comparación de tiempo constante y sin distinguir mayúsculas ni espacios.
+2. Una validación correcta devuelve una cookie `analia_access` **HttpOnly, SameSite=Lax,
+   Secure en producción, 7 días**, firmada con HMAC (`ANALYZE_ACCESS_SECRET`, o el propio
+   código si no hay secreto). Sin estado en memoria: funciona con varias instancias.
+3. Sin cookie válida, `POST /api/analyze` responde 401 con un mensaje amable. La puerta
+   de la UI es solo comodidad: la barrera real es el endpoint.
+4. **Sin código configurado el acceso queda abierto**, para desarrollo. En ese modo sí se
+   aplican rate limit y cuota mensual.
+5. **Con código válido no se aplican límites de uso.** Se registra una línea por consulta
+   (`[analyze] ok ... source=tester`) para poder contar volumen y vigilar gasto.
+6. Los intentos de código están limitados a 10 cada 10 minutos por IP.
+
+### Consecuencias
+
+- El control del gasto deja de estar en la app y pasa a estar en dos lugares: la rotación
+  del código y el **límite de facturación del panel de OpenAI**. Hay que configurarlo.
+- El contador del log (`instancia=N`) es por instancia, no un total global: el total real
+  de consumo está en el panel del proveedor.
+- Rotar el código invalida todas las sesiones (cambia la clave del HMAC). Es la forma de
+  cortar el acceso si el código se filtra.
+- Cualquiera con el código puede usar la app sin tope. Es el costo de no tener cuentas.
+
+### Alternativas descartadas
+
+- **Validar el código en el cliente:** el código queda en el bundle.
+- **Basic Auth:** más fricción para el público objetivo y sin control de mensajes.
+- **Lista de IPs:** frágil con redes móviles y NAT compartido.
+- **Cuentas reales:** contradice ADR-006 y agrega gestión de contraseñas a personas que
+  justamente tienen que cuidar sus contraseñas.

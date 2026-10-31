@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { resolveAccess } from "@/lib/access/session";
 import { createMonthlyBudget, resolveMonthlyLimit } from "@/lib/analysis/budget";
 import type { Analysis } from "@/lib/analysis/contract";
 import { analysisSchema } from "@/lib/analysis/contract";
@@ -8,6 +9,7 @@ import { MAX_SERVER_IMAGE_BYTES, sniffImageType } from "@/lib/analysis/image-gua
 import { USER_MESSAGES } from "@/lib/analysis/messages";
 import { getAnalysisProvider } from "@/lib/analysis/providers";
 import { createRateLimiter } from "@/lib/analysis/rate-limit";
+import { clientIp } from "@/lib/request/ip";
 import { enforceSafety, SafetyViolation } from "@/lib/safety/policy";
 
 /**
@@ -38,14 +40,8 @@ const limiter = createRateLimiter({
 
 const budget = createMonthlyBudget(resolveMonthlyLimit());
 
-function clientIp(request: Request): string {
-  const forwarded = request.headers.get("x-forwarded-for");
-  if (forwarded) {
-    const first = forwarded.split(",")[0]?.trim();
-    if (first) return first;
-  }
-  return request.headers.get("x-real-ip") ?? "desconocida";
-}
+/** Contador de instancia: sirve para ver el volumen en los logs, no como total. */
+let served = 0;
 
 function errorResponse(error: AnalysisError, requestId: string) {
   const headers: Record<string, string> = { "Cache-Control": "no-store" };
@@ -61,23 +57,37 @@ function errorResponse(error: AnalysisError, requestId: string) {
 
 export async function POST(request: Request) {
   const requestId = crypto.randomUUID();
+  const startedAt = Date.now();
+  const access = resolveAccess(request.headers.get("cookie"));
 
   try {
-    const decision = limiter(clientIp(request));
-    if (!decision.allowed) {
+    if (access === "denied") {
       throw new AnalysisError(
-        "rate_limited",
-        "Hiciste varias consultas seguidas. Esperá un momento y volvé a intentar.",
-        { retryAfterSeconds: decision.retryAfterSeconds },
+        "unauthorized",
+        "Hace falta el código de acceso para analizar una captura.",
       );
     }
 
-    const quota = budget();
-    if (!quota.allowed) {
-      throw new AnalysisError(
-        "quota_exhausted",
-        "Llegamos al límite de consultas de este mes. Probá de nuevo el mes que viene.",
-      );
+    // Los límites protegen el modo abierto (desarrollo, sin código). Con código
+    // válido no se limita el uso: el control es el código y el tope de gasto del
+    // proveedor. Igual queda una línea por consulta para poder contar y monitorear.
+    if (access === "open") {
+      const decision = limiter(clientIp(request));
+      if (!decision.allowed) {
+        throw new AnalysisError(
+          "rate_limited",
+          "Hiciste varias consultas seguidas. Esperá un momento y volvé a intentar.",
+          { retryAfterSeconds: decision.retryAfterSeconds },
+        );
+      }
+
+      const quota = budget();
+      if (!quota.allowed) {
+        throw new AnalysisError(
+          "quota_exhausted",
+          "Llegamos al límite de consultas de este mes. Probá de nuevo el mes que viene.",
+        );
+      }
     }
 
     const declaredLength = Number(request.headers.get("content-length") ?? "0");
@@ -157,6 +167,15 @@ export async function POST(request: Request) {
       }
       throw error;
     }
+
+    served += 1;
+    // Una línea por consulta: permite contar volumen y vigilar el gasto. El
+    // total real de facturación está en el panel del proveedor.
+    console.info(
+      `[analyze] ok (${requestId}) source=${access} verdict=${safe.verdict} ${
+        Date.now() - startedAt
+      }ms instancia=${served}`,
+    );
 
     return NextResponse.json(
       { analysis: safe, requestId },

@@ -10,6 +10,8 @@
 import type { AnalysisErrorCode } from "./errors";
 
 export const USER_MESSAGES: Record<AnalysisErrorCode, string> = {
+  unauthorized:
+    "Necesitás el código de acceso para probar AnalIA. Si estás en la prueba, pedíselo a quien te invitó.",
   invalid_image: "No pudimos leer ese archivo. Probá con otra captura.",
   too_large: "La imagen es muy pesada. Probá con otra captura.",
   rate_limited: "Hiciste varias consultas seguidas. Esperá un momento y volvé a intentar.",

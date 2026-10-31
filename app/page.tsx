@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { AccessGate } from "@/components/access-gate";
 import { CaptureUploader } from "@/components/capture-uploader";
 
 // La CSP usa un nonce por request (ADR-011): la página tiene que renderizarse en
@@ -24,7 +25,9 @@ export default function HomePage() {
           en palabras simples, y qué conviene hacer.
         </p>
 
-        <CaptureUploader />
+        <AccessGate>
+          <CaptureUploader />
+        </AccessGate>
 
         <p className="privacy-line">
           AnalIA no guarda tus capturas: la copia original queda en tu teléfono.{" "}
@@ -33,7 +36,7 @@ export default function HomePage() {
       </main>
 
       <footer className="footer">
-        <p>AnalIA · Etapa 2 de 6</p>
+        <p>AnalIA · Piloto</p>
         <nav aria-label="Enlaces legales">
           <Link href="/privacidad">Privacidad</Link>
         </nav>

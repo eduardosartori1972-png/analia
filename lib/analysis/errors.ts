@@ -4,6 +4,7 @@
  */
 
 export type AnalysisErrorCode =
+  | "unauthorized"
   | "invalid_image"
   | "too_large"
   | "rate_limited"
@@ -13,6 +14,7 @@ export type AnalysisErrorCode =
   | "invalid_response";
 
 const HTTP_STATUS: Record<AnalysisErrorCode, number> = {
+  unauthorized: 401,
   invalid_image: 415,
   too_large: 413,
   rate_limited: 429,

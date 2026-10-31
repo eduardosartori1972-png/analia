@@ -39,17 +39,19 @@ git push -u origin main
 En **Settings → Environment Variables**, cargar para **Production** y **Preview**
 (marcar también Development si se usa `vercel dev`):
 
-| Nombre                       | Valor            | Notas                                                         |
-| ---------------------------- | ---------------- | ------------------------------------------------------------- |
-| `ANALYZE_PROVIDER`           | `deepseek`       |                                                               |
-| `ANALYZE_API_KEY`            | la clave real    | marcar **Sensitive**: no se puede leer después                |
-| `ANALYZE_MODEL`              | `deepseek-flash` | nombre exacto del modelo en tu cuenta                         |
-| `ANALYZE_MAX_TOKENS`         | `4096`           | espacio para la respuesta; el costo depende de lo que escriba |
-| `ANALYZE_COST_PER_CALL_USD`  | `0.0003`         | habilita el tope por presupuesto                              |
-| `ANALYZE_MONTHLY_LIMIT`      | `100`            | tope de consultas del piloto                                  |
-| `ANALYZE_MONTHLY_BUDGET_USD` | `3`              |                                                               |
-| `ANALYZE_FALLBACK_PROVIDER`  | `none`           | cambiar a `openai` recién cuando exista su clave              |
-| `ANALYZE_RATE_LIMIT`         | `30`             | consultas por IP cada 10 minutos                              |
+| Nombre                       | Valor                | Notas                                                          |
+| ---------------------------- | -------------------- | -------------------------------------------------------------- |
+| `ANALYZE_PROVIDER`           | `openai`             |                                                                |
+| `ANALYZE_API_KEY`            | la clave real        | marcar **Sensitive**: no se puede leer después                 |
+| `ANALYZE_MODEL`              | `gpt-4o-mini`        | nombre exacto del modelo en tu cuenta                          |
+| `ANALYZE_ACCESS_CODE`        | el código del piloto | sin esto el acceso queda abierto; en producción es obligatorio |
+| `ANALYZE_ACCESS_SECRET`      | 32+ caracteres       | firma la cookie; si falta se usa el código                     |
+| `ANALYZE_MAX_TOKENS`         | `4096`               | espacio para la respuesta; el costo depende de lo que escriba  |
+| `ANALYZE_COST_PER_CALL_USD`  | `0.00048`            | habilita el tope por presupuesto                               |
+| `ANALYZE_MONTHLY_LIMIT`      | `100`                | solo aplica en modo abierto (sin código)                       |
+| `ANALYZE_MONTHLY_BUDGET_USD` | `3`                  | solo aplica en modo abierto                                    |
+| `ANALYZE_FALLBACK_PROVIDER`  | `none`               | cambiar a `openai` recién cuando exista su clave               |
+| `ANALYZE_RATE_LIMIT`         | `30`                 | solo aplica en modo abierto                                    |
 
 Reglas:
 
@@ -57,6 +59,8 @@ Reglas:
 - Si `ANALYZE_FALLBACK_PROVIDER` queda en `openai` sin `ANALYZE_FALLBACK_API_KEY`, el
   respaldo se deshabilita solo y queda un aviso en los logs; el primario sigue andando.
 - Cambiar una variable **no** reinicia el deployment: hay que redeployar.
+- Con código configurado, los límites de uso no se aplican: el gasto se controla con el
+  **límite de facturación del panel de OpenAI** y rotando el código.
 
 ## Paso 4 — deploy de preview
 
