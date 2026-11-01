@@ -77,6 +77,10 @@ Reglas para el facilitador:
 
 ## 7. Registro
 
+Planilla lista para usar: [`planilla-piloto.xlsx`](planilla-piloto.xlsx). Cuatro hojas:
+instrucciones, registro (P01…P20 × 3 escenarios), encuesta final y resumen con las
+métricas y las metas.
+
 Planilla por participante (sin capturas, sin datos sensibles):
 
 | Campo                     | Escala                                 |
