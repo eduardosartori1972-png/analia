@@ -160,6 +160,11 @@ modelo controle la redacción final.
 
 ## Etapa 4 — Datos duros
 
+**Estado: diferida para el piloto** (decisión del 2026-10-25: nada de anotaciones gráficas;
+los datos duros, si se muestran, van como texto). El contrato ya tiene `hardData` y hoy
+llega siempre vacío. No bloquea el piloto, pero es una limitación conocida: la app no
+señala el link ni el remitente concreto, solo lo describe en palabras.
+
 **Objetivo:** mostrar links, teléfonos y remitentes de forma confiable y en texto.
 
 **Alcance**
@@ -180,7 +185,7 @@ modelo controle la redacción final.
 ## Etapa 5 — Los 3 casos y el protocolo de piloto
 
 **Objetivo:** demostrar que el producto funciona en los tres escenarios que definen el
-MVP y dejar listo el protocolo para las 10 personas.
+MVP y dejar listo el protocolo para las 20 personas del piloto.
 
 **Casos**
 
@@ -193,10 +198,12 @@ MVP y dejar listo el protocolo para las 10 personas.
 
 **Criterios de aceptación**
 
-- [ ] Los tres casos tienen captura sintética y `expected.json` en `evals/`.
-- [ ] Corren en CI y fallan si cambia el comportamiento esperado.
-- [ ] El protocolo define "acción correcta" por escenario y una medición pre/post.
-- [ ] El consentimiento está en lenguaje claro y revisado.
+- [x] Los tres casos tienen captura sintética y `case.json` en `evals/cases/`
+      (más el caso de inyección).
+- [x] Corren en CI y fallan si cambia el comportamiento esperado.
+- [ ] El protocolo define "acción correcta" por escenario y una medición pre/post
+      (`PILOT.md`, ya con el diseño de 20 personas).
+- [ ] El consentimiento está en lenguaje claro y revisado (`CONSENT.md` es el borrador).
 
 ---
 
@@ -205,12 +212,14 @@ MVP y dejar listo el protocolo para las 10 personas.
 - [x] CSP con nonces (ADR-011), verificada sobre el HTML servido.
 - [x] Plazo de retención confirmado en la documentación de OpenAI: hasta 30 días por
       monitoreo de abuso, sin entrenamiento (`PRIVACY.md`, sección 2).
-- [ ] Descargar y archivar el DPA de OpenAI con fecha de aceptación.
+- [x] DPA de OpenAI firmado el 31/10/2026 y archivado.
+- [x] `/privacidad` publicada, sin aviso de borrador, con contacto y responsable.
+- [x] Código de acceso del piloto (ADR-013), activo en producción.
 - [ ] Revisión legal (Ley 25.326): consentimiento, registro de base, transferencia
       internacional, datos de terceros. Insumo listo en `DATA-INVENTORY.md`.
-- [ ] Publicar `/privacidad` sin el aviso de borrador. Falta el correo de contacto.
-- [ ] Consentimiento del piloto revisado (`CONSENT.md` es el borrador).
-- [ ] Monitoreo de abuso, alertas de costo y límites del enlace de cohorte.
+- [ ] Revisar el consentimiento con una persona del público objetivo.
+- [ ] Monitoreo: límite de facturación en OpenAI y rutina de revisión de logs.
+- [ ] Confirmar el plazo de retención de logs de Vercel.
 
 ---
 
