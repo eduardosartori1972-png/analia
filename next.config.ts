@@ -1,9 +1,8 @@
 import type { NextConfig } from "next";
 
 /**
- * Cabeceras de seguridad base. No incluyen CSP todavía: Next inyecta scripts
- * inline y una CSP estricta necesita nonces vía middleware. Queda como tarea
- * de hardening previa al piloto (ver docs/THREAT-MODEL.md, T-07).
+ * Cabeceras de seguridad base. La CSP no está acá: se genera por request con un
+ * nonce en `middleware.ts` (ADR-011), porque Next inyecta scripts inline.
  */
 const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },

@@ -5,10 +5,12 @@ correo o ventana que le genera duda y AnalIA le responde, en palabras simples, s
 señales de estafa y qué conviene hacer.
 
 > **Estado: listo para el piloto cerrado.** Producción en Vercel con OpenAI
-> (`gpt-4o-mini`), acceso por código (ADR-013), CSP con nonce (ADR-011) y privacidad con
-> plazo de retención verificado (`/privacidad` sigue en revisión legal). Ver
-> [`docs/PLAN.md`](docs/PLAN.md), [`docs/PROVIDERS.md`](docs/PROVIDERS.md) y
-> [`docs/KEY-ROTATION.md`](docs/KEY-ROTATION.md).
+> (`gpt-4o-mini`), acceso por código (ADR-013), CSP con nonce (ADR-011) y política de
+> privacidad publicada. Ver [`docs/PLAN.md`](docs/PLAN.md),
+> [`docs/PROVIDERS.md`](docs/PROVIDERS.md) y [`docs/KEY-ROTATION.md`](docs/KEY-ROTATION.md).
+>
+> **Si llegás nuevo al proyecto, empezás por [`docs/HANDOFF.md`](docs/HANDOFF.md):**
+> arquitectura, estado del deploy, decisiones y próximos pasos en una sola lectura.
 
 ## Activación del proveedor real
 
