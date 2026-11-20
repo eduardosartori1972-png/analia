@@ -274,6 +274,17 @@ a:hover {
   gap: 0.5rem;
 }
 
+.gate__notice {
+  margin: 0;
+  padding: 0.75rem 0.875rem;
+  background-color: #fff8ec;
+  border: 1px solid #e2c68a;
+  border-radius: var(--radius-md);
+  color: #6b4300;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
 .gate__label {
   font-size: 1rem;
   font-weight: 650;
@@ -319,45 +330,66 @@ a:hover {
 /* Resultado del análisis. El color acompaña, pero el veredicto se lee:
    nunca depende solo del tono. */
 .result {
+  --tone: var(--color-brand);
+  --tone-bg: var(--color-surface);
+
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
   padding: 1.25rem;
-  background-color: var(--color-surface);
+  background-color: var(--tone-bg);
   border: 1px solid var(--color-border);
-  border-left: 8px solid #8a8578;
+  border-left: 8px solid var(--tone);
   border-radius: var(--radius-button);
 }
 
 .result--neutral {
-  border-left-color: #3f6b5b;
+  --tone: #0a4a3c;
+  --tone-bg: #f2f7f4;
 }
 
 .result--suspicious {
-  border-left-color: #b26a00;
-  background-color: #fffdf7;
+  --tone: #8a5200;
+  --tone-bg: #fff8ec;
 }
 
 .result--danger {
-  border-left-color: #9b2f1d;
-  background-color: #fffaf8;
+  --tone: #8f2517;
+  --tone-bg: #fdf1ee;
 }
 
 .result--unknown {
-  border-left-color: #8a8578;
+  --tone: #5b564d;
+  --tone-bg: #f7f5f0;
 }
 
 .result__verdict {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
   margin: 0;
-  color: var(--color-text-muted);
-  font-size: 0.9375rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  color: var(--tone);
+  font-size: clamp(1.5rem, 6vw, 1.9rem);
+  font-weight: 750;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
 }
 
-.result h2 {
-  font-size: 1.5rem;
+.result__icon {
+  width: 1.15em;
+  height: 1.15em;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.result__title {
+  margin: -0.25rem 0 0;
+  font-size: 1.125rem;
+  font-weight: 650;
 }
 
 .result h3 {
@@ -390,7 +422,7 @@ a:hover {
   padding-top: 0.75rem;
   border-top: 1px solid var(--color-border);
   color: var(--color-text-muted);
-  font-size: 0.9375rem;
+  font-size: 1.0625rem;
 }
 
 /* Derivación: qué hacer si ya hay riesgo. Va antes del límite para que el paso

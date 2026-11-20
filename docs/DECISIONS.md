@@ -19,6 +19,7 @@ por qué.
 | ADR-011 | CSP con nonce por request y páginas dinámicas                     | Aceptada                | 2026-10-30 |
 | ADR-012 | OpenAI como proveedor de producción; DeepSeek queda en desarrollo | Aceptada                | 2026-10-30 |
 | ADR-013 | Código de acceso con cookie firmada; testers sin límite de uso    | Aceptada                | 2026-10-31 |
+| ADR-014 | El veredicto es el título de la tarjeta, con ícono y color        | Aceptada                | 2026-11-20 |
 
 ---
 
@@ -559,3 +560,40 @@ Validar el código en el navegador no sirve: quedaría dentro del bundle y serí
 - **Lista de IPs:** frágil con redes móviles y NAT compartido.
 - **Cuentas reales:** contradice ADR-006 y agrega gestión de contraseñas a personas que
   justamente tienen que cuidar sus contraseñas.
+
+---
+
+## ADR-014 — El veredicto es el título de la tarjeta, con ícono y color
+
+**Estado:** aceptada · 2026-11-20
+
+### Contexto
+
+La etiqueta fija del veredicto ("Parece una estafa") estaba en 15 px, mayúsculas y color
+gris, mientras que el título generado por el modelo iba en 24 px. Para una persona mayor,
+la respuesta es lo que vino a buscar; el título del modelo varía entre respuestas y no es
+la parte confiable. Además, el tono se comunicaba solo con un borde lateral de 8 px, que
+no dice nada a quien no distingue bien los colores.
+
+### Decisión
+
+1. El `h2` de la tarjeta es la **etiqueta canónica del veredicto**, con ícono propio y
+   color por tono (verde, ámbar, rojo, gris).
+2. El título del modelo pasa a **subtítulo**.
+3. El límite canónico sube de 15 a **17 px**.
+4. Al mostrarse el resultado, el **foco va al `h2`** (`tabIndex={-1}`) para que el lector
+   de pantalla anuncie la respuesta sin recorrer la página.
+
+### Consecuencias
+
+- El veredicto se lee en los primeros dos segundos y no depende solo del color: hay
+  palabra e ícono.
+- Se pierde el título grande del modelo como gancho, que de todos modos era variable.
+- La etiqueta vive en `lib/analysis/presentation.ts`, separada del componente, y tiene
+  tests que impiden que alguna diga "seguro".
+
+### Alternativas descartadas
+
+- **Agrandar el título del modelo:** no es confiable ni estable entre proveedores.
+- **Confiar solo en el color del borde:** falla con daltonismo y baja visión.
+- **Repetir el veredicto en los dos lugares:** compite consigo mismo y alarga la tarjeta.

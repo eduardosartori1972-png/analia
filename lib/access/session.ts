@@ -11,31 +11,64 @@ import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 export const ACCESS_COOKIE = "analia_access";
 const TOKEN_VERSION = "v1";
 const TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 días
+/** Debajo de esto el código es un typo, no una decisión. */
+const MIN_CODE_LENGTH = 6;
 
-function configuredCode(): string | null {
+let warnedMisconfigured = false;
+
+function rawCode(): string | null {
   const code = process.env.ANALYZE_ACCESS_CODE?.trim();
-  return code && code.length >= 6 ? code : null;
+  return code && code.length > 0 ? code : null;
 }
 
-/** Clave del HMAC. Si no hay secreto dedicado, se usa el propio código. */
-function signingSecret(): string | null {
-  const secret = process.env.ANALYZE_ACCESS_SECRET?.trim();
-  if (secret && secret.length >= 16) return secret;
-  return configuredCode();
+/**
+ * Código usable para validar. Si está configurado pero es demasiado corto, se
+ * considera inválido: nadie puede entrar (fail closed).
+ */
+function configuredCode(): string | null {
+  const code = rawCode();
+  return code && code.length >= MIN_CODE_LENGTH ? code : null;
 }
 
-/** Sin código configurado, el acceso queda abierto (solo desarrollo). */
+function warnMisconfigured(): void {
+  if (warnedMisconfigured) return;
+  warnedMisconfigured = true;
+  console.error(
+    `[access] ANALYZE_ACCESS_CODE tiene menos de ${MIN_CODE_LENGTH} caracteres: el acceso queda bloqueado.`,
+  );
+}
+
+/**
+ * Sin código configurado, el acceso queda abierto (solo desarrollo).
+ * Con un código inválido configurado, `isAccessCodeConfigured()` sigue siendo
+ * `true`: la app no se abre por accidente, se bloquea.
+ */
 export function isAccessCodeConfigured(): boolean {
-  return configuredCode() !== null;
+  return rawCode() !== null;
+}
+
+/** Configurado pero inutilizable: hay que corregir la variable. */
+export function isAccessCodeMisconfigured(): boolean {
+  return rawCode() !== null && configuredCode() === null;
 }
 
 /** Compara sin filtrar el largo ni el contenido por tiempo de respuesta. */
 export function isCodeValid(input: string): boolean {
   const expected = configuredCode();
-  if (!expected) return false;
+  if (!expected) {
+    if (isAccessCodeMisconfigured()) warnMisconfigured();
+    return false;
+  }
 
   const normalize = (value: string) => value.trim().toUpperCase();
   return safeEqual(normalize(input), normalize(expected));
+}
+
+/** Clave del HMAC. Si no hay secreto dedicado, se usa el código válido. */
+function signingSecret(): string | null {
+  const secret = process.env.ANALYZE_ACCESS_SECRET?.trim();
+  if (secret && secret.length >= 16) return secret;
+  return configuredCode();
 }
 
 export function issueAccessToken(now = Date.now()): string | null {
@@ -76,7 +109,16 @@ export function readCookie(header: string | null, name: string): string | undefi
 
   for (const part of header.split(";")) {
     const [key, ...rest] = part.split("=");
-    if (key?.trim() === name) return decodeURIComponent(rest.join("=").trim());
+    if (key?.trim() !== name) continue;
+
+    const raw = rest.join("=").trim();
+    try {
+      return decodeURIComponent(raw);
+    } catch {
+      // Una cookie corrupta no puede tumbar el request: se usa tal cual y,
+      // como no va a verificar, termina en 401.
+      return raw;
+    }
   }
 
   return undefined;
@@ -91,6 +133,10 @@ export type AccessMode = "tester" | "open" | "denied";
  */
 export function resolveAccess(cookieHeader: string | null, now = Date.now()): AccessMode {
   if (!isAccessCodeConfigured()) return "open";
+  if (isAccessCodeMisconfigured()) {
+    warnMisconfigured();
+    return "denied";
+  }
 
   const token = readCookie(cookieHeader, ACCESS_COOKIE);
   return verifyAccessToken(token, now) ? "tester" : "denied";

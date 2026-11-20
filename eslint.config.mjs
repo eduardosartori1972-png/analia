@@ -27,5 +27,13 @@ export default defineConfig([
       "no-console": "off",
     },
   },
-  globalIgnores([".next/**", "out/**", "build/**", "coverage/**", "next-env.d.ts"]),
+  globalIgnores([
+    ".next/**",
+    "out/**",
+    "build/**",
+    "coverage/**",
+    "next-env.d.ts",
+    // Scratch de verificación local (no se versiona).
+    ".verify/**",
+  ]),
 ]);

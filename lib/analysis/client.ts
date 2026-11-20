@@ -18,6 +18,11 @@ export class AnalysisClientError extends Error {
 
 type ErrorPayload = { error?: { code?: string; message?: string } };
 
+/** La sesión del piloto venció: hay que volver a pedir el código. */
+export function isSessionExpired(error: unknown): boolean {
+  return error instanceof AnalysisClientError && error.code === "unauthorized";
+}
+
 function fallbackMessage(status: number): string {
   if (status === 413) return "La imagen es demasiado grande. Probá con otra captura.";
   if (status === 415) return "Ese archivo no es una imagen que podamos leer.";

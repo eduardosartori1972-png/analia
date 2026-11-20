@@ -212,3 +212,18 @@ in-process. En CI (GitHub Actions, `.github/workflows/ci.yml`) corre normal.
 6. Antes de cambiar de modelo o proveedor, correr las evals y reverificar la promesa de
    privacidad.
 7. DeepSeek no se usa en producción ni como respaldo.
+
+## 9. Auditoría previa al piloto (2026-11-20)
+
+| Hallazgo                                                   | Estado                                                        |
+| ---------------------------------------------------------- | ------------------------------------------------------------- |
+| Next 16.4.3 con 7 advisories moderados                     | **Corregido:** 16.4.6, `pnpm audit` sin hallazgos             |
+| El código de acceso fallaba abierto si tenía <6 caracteres | **Corregido:** fail closed + log                              |
+| Un 401 dejaba al tester sin salida                         | **Corregido:** la puerta se vuelve a mostrar con aviso y foco |
+| El veredicto era el texto más chico (15 px)                | **Corregido:** es el h2 con ícono y color (ADR-014)           |
+| Una cookie malformada podía dar 500                        | **Corregido:** `readCookie` no lanza                          |
+| Tope de facturación en OpenAI                              | **Pendiente (responsable del proyecto)**                      |
+| HSTS sin verificar en producción                           | Pendiente                                                     |
+| Tests HTTP de `/api/access` y `/api/analyze`               | Pendiente                                                     |
+| Monitoreo y alertas de errores/costo                       | Pendiente                                                     |
+| Código del piloto con guion (difícil en teclado móvil)     | Recomendado: alfanumérico                                     |

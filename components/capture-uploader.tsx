@@ -2,8 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState, type ChangeEvent } from "react";
 
+import { useAccessGate } from "@/components/access-gate";
 import { AnalysisResult } from "@/components/analysis-result";
-import { AnalysisClientError, requestAnalysis } from "@/lib/analysis/client";
+import { AnalysisClientError, isSessionExpired, requestAnalysis } from "@/lib/analysis/client";
 import type { Analysis } from "@/lib/analysis/contract";
 import { formatBytes } from "@/lib/image/geometry";
 import { ImageError, prepareImage, type PreparedImage } from "@/lib/image/preprocess";
@@ -21,6 +22,7 @@ type AnalysisState =
  * Un solo botón primario en cada paso; el resto es secundario.
  */
 export function CaptureUploader() {
+  const access = useAccessGate();
   const [preparing, setPreparing] = useState(false);
   const [capture, setCapture] = useState<Capture | null>(null);
   const [captureError, setCaptureError] = useState<string | null>(null);
@@ -104,6 +106,14 @@ export function CaptureUploader() {
       setAnalysis({ status: "done", analysis: result });
     } catch (error) {
       if (request !== analysisRequestRef.current) return;
+
+      // La sesión venció: en lugar de dejar un error sin salida, se vuelve a
+      // mostrar la puerta de acceso con el campo enfocado.
+      if (isSessionExpired(error)) {
+        access?.relock("Tu sesión venció. Ingresá el código de nuevo.");
+        return;
+      }
+
       setAnalysis({
         status: "error",
         message:

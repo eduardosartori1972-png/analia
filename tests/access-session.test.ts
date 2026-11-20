@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
+  isAccessCodeConfigured,
+  isAccessCodeMisconfigured,
   isCodeValid,
   issueAccessToken,
   readCookie,
@@ -90,6 +92,27 @@ describe("resolveAccess", () => {
   it("sin código configurado, el acceso queda abierto", () => {
     vi.stubEnv("ANALYZE_ACCESS_CODE", undefined);
     expect(resolveAccess(null)).toBe("open");
+  });
+
+  it("con un código demasiado corto, falla cerrado", () => {
+    vi.stubEnv("ANALYZE_ACCESS_CODE", "12345");
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    expect(isAccessCodeConfigured()).toBe(true);
+    expect(isAccessCodeMisconfigured()).toBe(true);
+    expect(isCodeValid("12345")).toBe(false);
+    expect(resolveAccess(null)).toBe("denied");
+
+    // Un token viejo tampoco sirve con la configuración rota.
+    const cookie = `analia_access=${issueAccessToken() ?? ""}`;
+    expect(resolveAccess(cookie)).toBe("denied");
+
+    spy.mockRestore();
+  });
+
+  it("no se rompe con una cookie malformada", () => {
+    expect(() => resolveAccess("analia_access=%ZZ")).not.toThrow();
+    expect(resolveAccess("analia_access=%ZZ")).toBe("denied");
   });
 });
 
