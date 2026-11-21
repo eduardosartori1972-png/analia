@@ -21,7 +21,7 @@ describe.skipIf(!enabled)("evals contra el proveedor real", () => {
   it("tiene un proveedor real configurado, no el fake", () => {
     expect(
       providerId,
-      "ANALYZE_PROVIDER sigue en fake: ponelo en deepseek en .env.local o exportalo en la terminal",
+      "ANALYZE_PROVIDER sigue en fake: ponelo en openai en .env.local o exportalo en la terminal",
     ).not.toBe("fake");
 
     expect(
@@ -30,7 +30,7 @@ describe.skipIf(!enabled)("evals contra el proveedor real", () => {
     ).toBe(true);
   });
 
-  it("corre los cuatro casos del corpus", async () => {
+  it("corre todos los casos del corpus", async () => {
     const results = await runAll({ provider: getAnalysisProvider() });
 
     for (const result of results) {

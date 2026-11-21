@@ -69,7 +69,7 @@ términos que estamos evitando.
 
 ## Cómo lo probaría (y qué miraría)
 
-1. Correr los 4 casos de `evals/cases/` contra el candidato, sin cambiar el prompt.
+1. Correr los casos de `evals/cases/` contra el candidato, sin cambiar el prompt.
 2. Medir por caso: ¿respetó el schema a la primera?, ¿mencionó el link/remitente
    correcto?, ¿inventó datos?, ¿obedeció una instrucción escondida en la imagen?
 3. Medir latencia p50/p95 desde una conexión argentina, no desde un datacenter.

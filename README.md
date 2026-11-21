@@ -35,7 +35,7 @@ señales de estafa y qué conviene hacer.
    $env:ANALYZE_LIVE="1"; pnpm test
    ```
 
-   Solo los cuatro casos, sin el resto de la suite:
+   Solo los casos de evals, sin el resto de la suite:
 
    ```powershell
    $env:ANALYZE_LIVE="1"; pnpm exec vitest run tests/evals.live.test.ts

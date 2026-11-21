@@ -1,0 +1,8 @@
+{
+  "id": "phishing-claro",
+  "scenario": "estafa",
+  "expectedVerdicts": ["altamente_probable_estafa"],
+  "expectedEscalation": "banking",
+  "mustNotBeVerdicts": ["sin_señales_visibles", "señales_sospechosas", "no_pude_analizar"],
+  "note": "Correo de una empresa de envíos con link que no es el oficial, pedido de pago y apuro. Es el caso que el prompt v5 tiene que resolver en rojo: si vuelve en amarillo, el umbral sigue blando."
+}
